@@ -2,5 +2,6 @@
 
 require_relative "lib/audition"
 require_relative "lib/directory"
+require_relative "data"
 
-Audition.new(Directory.new(".")).run
+puts Audition.new(STATIC_DATA).run
