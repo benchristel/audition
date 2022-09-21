@@ -1,10 +1,10 @@
-#!/usr/bin/env ruby
+#!/bin/bash
 
-w = ARGV[0]
-puts(
-  if w =~ /[aeiou]$/
-    w + "d"
-  else
-    w + "ed"
-  end
-)
+case "${1: -1}" in
+  a|e|i|o|u)
+    echo "${1}d"
+    ;;
+  *)
+    echo "${1}ed"
+    ;;
+esac
