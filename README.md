@@ -53,12 +53,17 @@ The `morphology` directory contains scripts, each of which performs a morphologi
 
 ```
 > Bears like to drive cars.
-bear_animal.PL like_v.PRES.3PL drive_v.INF car.PL
+bear_animal/PL like_v/PRES/3PL drive_v/INF car/PL.
 ```
 
 Might output (given appropriate lexicon and morphology files):
 
 ```
 > Bears like to drive cars.
-morgu pethain dyhremi gilmu
+morgu pethain dyhremi gilmu.
 ```
+
+Punctuation, spaces, and words that aren't in `lexicon.txt` are passed through
+unchanged. Note that the `/` character has a special meaning: it joins
+inflections to their root. If you're trying to translate text that includes
+literal slashes...  you're out of luck, at least for now.
