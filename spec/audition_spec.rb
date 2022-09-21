@@ -92,4 +92,37 @@ describe "Audition" do
       "goof/PL"
     )
   end
+
+  it "compounds" do
+    audition = Audition.new({
+      "lexicon.txt" => <<~EOF,
+        foo oof
+        bar rab
+      EOF
+      "sample.txt" => <<~EOF,
+        foo+bar
+      EOF
+      "morphology" => {
+        "compound" => lambda { |a, b| a + b }
+      },
+    })
+    expect(audition.run).to eq("oofrab")
+  end
+
+  it "allows compound words in the lexicon" do
+    audition = Audition.new({
+      "lexicon.txt" => <<~EOF,
+        foo oof
+        bar rab
+        baz foo+bar
+      EOF
+      "sample.txt" => <<~EOF,
+        baz
+      EOF
+      "morphology" => {
+        "compound" => lambda { |a, b| a + b }
+      },
+    })
+    expect(audition.run).to eq("oofrab")
+  end
 end

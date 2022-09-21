@@ -16,4 +16,8 @@ describe "Text.tokens" do
   it "treats slashes as part of words" do
     expect(Text.new("robot/PL").tokens).to eq ["robot/PL"]
   end
+
+  it "treats + as part of a word" do
+    expect(Text.new("robot+chicken").tokens).to eq ["robot+chicken"]
+  end
 end
