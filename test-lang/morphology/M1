@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
+#!/bin/bash
 
-require_relative "lib/lenit"
-puts lenit(ARGV[0])
+"$(dirname "$0")/lib/lenit.sh" "$1"

@@ -1,11 +1,16 @@
-#!/usr/bin/env ruby
+#!/bin/bash
 
-require_relative "lib/lenit"
+prev=""
 
-puts ARGV.each_with_index.map { |w, i|
-  if i > 0 && ARGV[i-1] =~ /[aeioudbglrnm]$/
-    lenit(w)
-  else
-    w
-  end
-}.join("")
+for arg in "$@"; do
+  case "${prev: -1}" in
+    a|e|i|o|u|d|b|g|l|r|n|m)
+      "$(dirname "$0")/lib/lenit.sh" "$arg"
+      prev="$arg"
+      ;;
+    *)
+      echo -n "$arg"
+      prev="$arg"
+      ;;
+  esac
+done
