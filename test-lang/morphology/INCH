@@ -1,11 +1,10 @@
-#!/usr/bin/env ruby
+#!/bin/bash
 
-w = ARGV[0]
-
-puts(
-  if w =~ /[aeiou]$/
-    w + "tha"
-  else
-    w + "atha"
-  end
-)
+case "${1: -1}" in
+  a|e|i|o|u)
+    echo "${1}tha"
+    ;;
+  *)
+    echo "${1}atha"
+    ;;
+esac
