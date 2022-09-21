@@ -1,12 +1,13 @@
-#!/usr/bin/env ruby
+#!/bin/bash
 
-w = ARGV[0]
-puts(
-  if w =~ /r$/
-    w + "en"
-  elsif w =~ /[aeiou]$/
-    w + "r"
-  else
-    w + "ir"
-  end
-)
+case "${1: -1}" in
+  r)
+    echo "${1}en"
+    ;;
+  a|e|i|o|u)
+    echo "${1}r"
+    ;;
+  *)
+    echo "${1}ir"
+    ;;
+esac
