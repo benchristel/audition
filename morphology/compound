@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require_relative "lib/lenit"
+
+puts ARGV.each_with_index.map { |w, i|
+  if i > 0 && ARGV[i-1] =~ /[aeioudbglrnm]$/
+    lenit(w)
+  else
+    w
+  end
+}.join("")

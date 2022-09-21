@@ -2,6 +2,13 @@
 
 require_relative "lib/audition"
 require_relative "lib/directory"
+require_relative "lib/sort"
 require_relative "data"
 
-puts Audition.new(STATIC_DATA).run
+if ARGV[0] == "sort"
+  ARGV.shift
+  sort "lexicon.txt"
+  exit 0
+end
+
+puts Audition.new(Directory.new(".")).run

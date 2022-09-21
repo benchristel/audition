@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+w = ARGV[0]
+puts(
+  if w =~ /r$/
+    w + "en"
+  elsif w =~ /[aeiou]$/
+    w + "r"
+  else
+    w + "ir"
+  end
+)

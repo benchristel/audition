@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+w = ARGV[0]
+
+puts(
+  if w =~ /[aeiou]$/
+    w + "tha"
+  else
+    w + "atha"
+  end
+)

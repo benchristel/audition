@@ -15,7 +15,13 @@ class Audition
       else
         Text.new(line).tokens.map { |w|
           gloss, *inflections = w.split("/")
-          inflections.reduce(lexicon[gloss] || gloss) { |w, inflection|
+          word = lexicon[gloss] || gloss
+          if word =~ /\+/
+            translated_morphemes = word.split("+")
+              .map { |morpheme| lexicon[morpheme] || morpheme }
+            word = data["morphology"]["compound"].call(*translated_morphemes)
+          end
+          inflections.reduce(word) { |w, inflection|
             inflect = data["morphology"][inflection]
             if inflect.nil?
               w + "/" + inflection
