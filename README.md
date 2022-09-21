@@ -1,16 +1,17 @@
-# audition (aspirational README)
+# audition
 
 Audition is a program for conlangers. It lets you easily try out different words, morphology, and syntax, and quickly see how sentences in the language will look.
 
 ## Usage
 
-```
+```bash
 cd /path/to/my/project/dir
-au
+au # outputs translated sample.txt (see input format below)
 ```
 
-```
-au -f # orders lexicon by frequency
+```bash
+au sort   # alphabetizes lexicon by the first column (english)
+au sort 1 # alphabetizes lexicon by the second column (conlang)
 ```
 
 ## Input Format
@@ -20,7 +21,6 @@ An Audition project has the following structure:
 ```
 lexicon.txt
 sample.txt
-generate
 morphology/
   PL
   INF
@@ -32,23 +32,24 @@ morphology/
 `lexicon.txt` looks like this:
 
 ```
-at          - ubu
-away        - grom
-bear_animal X morg
-car         X gilm
-drive       X dyhrem
-like        X peth
+at          ubu
+away        grom
+bear_animal morg
+car         gilm
+drive       dyhrem
+like_v      peth
 ```
 
-The first column contains glosses; these must not have spaces but can contain any other characters.
+The first column contains glosses; these must not have spaces but can contain
+any other characters.
 
-The second column contains a `-` to indicate that the row is "unlocked", or `X` to indicate that it is "locked". Words in unlocked rows are regenerated randomly when you run `au`, while words in locked rows are preserved. The second column is optional; if not specified, the default is "locked".
+The second column contains the translation in your conlang. It must not contain
+spaces. Columns after the second one are ignored; you can put comments there if
+you like, or leave old versions of words around for later reference/revival.
 
 The `morphology` directory contains scripts, each of which performs a morphological operation on a word. The scripts are invoked with the input word as an argument and are expected to output the inflected form on standard output.
 
-The `generate` file is a program that generates a word at random.
-
-`sample.txt` should contain sentences built from glosses in `lexicon.txt` and inflections in `morphology`. These will be translated when `au` runs. Lines beginning with `>` are simply copied into the output. E.g.
+`sample.txt` should contain sentences built from glosses in `lexicon.txt` and inflections in `morphology`. Translations of these sentences will be printed to the terminal when you run `au`. Lines beginning with `>` are simply copied into the output. E.g.
 
 ```
 > Bears like to drive cars.
