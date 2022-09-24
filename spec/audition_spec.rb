@@ -125,4 +125,20 @@ describe "Audition" do
     })
     expect(audition.run).to eq("oofrab")
   end
+
+  it "dereferences words with a trailing plus" do
+    audition = Audition.new({
+      "lexicon.txt" => <<~EOF,
+        see   fryn
+        look  see+
+      EOF
+      "sample.txt" => <<~EOF,
+        look
+      EOF
+      "morphology" => {
+        "compound" => lambda { |a| a }
+      },
+    })
+    expect(audition.run).to eq("fryn")
+  end
 end
