@@ -126,6 +126,24 @@ describe "Audition" do
     expect(audition.run).to eq("oofrab")
   end
 
+  it "allows compounds of compounds" do
+    audition = Audition.new({
+      "lexicon.txt" => <<~EOF,
+        foo oof
+        bar rab
+        baz foo+bar
+        kludge baz+baz
+      EOF
+      "sample.txt" => <<~EOF,
+        kludge
+      EOF
+      "morphology" => {
+        "compound" => lambda { |a, b| a + b }
+      },
+    })
+    expect(audition.run).to eq("oofraboofrab")
+  end
+
   it "dereferences words with a trailing plus" do
     audition = Audition.new({
       "lexicon.txt" => <<~EOF,

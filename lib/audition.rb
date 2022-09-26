@@ -6,8 +6,6 @@ class Audition
   end
 
   def run
-    lexicon = Hash[data["lexicon.txt"].split("\n").map { |line| line.split(/ +/)[0..1] }]
-
     lines = data["sample.txt"].split("\n")
     lines.map { |line|
       if line =~ /^>/
@@ -15,12 +13,7 @@ class Audition
       else
         Text.new(line).tokens.map { |w|
           gloss, *inflections = w.split("/")
-          word = lexicon[gloss] || gloss
-          if word =~ /\+/
-            translated_morphemes = word.split("+")
-              .map { |morpheme| lexicon[morpheme] || morpheme }
-            word = data["morphology"]["compound"].call(*translated_morphemes)
-          end
+          word = translate(gloss)
           inflections.reduce(word) { |w, inflection|
             inflect = data["morphology"][inflection]
             if inflect.nil?
@@ -38,5 +31,18 @@ class Audition
 
   def data
     @data
+  end
+
+  def translate(gloss)
+    word = lexicon[gloss] || gloss
+    if word =~ /\+/
+      translated_morphemes = word.split("+").map(&method(:translate))
+      word = data["morphology"]["compound"].call(*translated_morphemes)
+    end
+    word
+  end
+
+  def lexicon
+    @lexicon ||= Hash[data["lexicon.txt"].split("\n").map { |line| line.split(/ +/)[0..1] }]
   end
 end
