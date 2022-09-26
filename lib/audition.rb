@@ -25,8 +25,12 @@ class Audition
   def translate(gloss)
     word = lexicon[gloss] || gloss
     if word =~ /\+/
-      translated_morphemes = word.split("+").map(&method(:translate))
-      data["morphology"]["compound"].call(*translated_morphemes)
+      translated_morphemes = word
+        .split("+")
+        .map(&method(:translate))
+        .reduce { |compounded, w|
+          data["morphology"]["compound"].call(compounded, w)
+        }
     elsif word =~ /\//
       root, *inflections = word.split("/")
       inflections.reduce(translate(root)) { |w, inflection|

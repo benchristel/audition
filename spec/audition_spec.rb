@@ -109,6 +109,27 @@ describe "Audition" do
     expect(audition.run).to eq("oofrab")
   end
 
+  it "compounds more than two elements, left-associatively" do
+    calls_to_compound = []
+    audition = Audition.new({
+      "lexicon.txt" => "",
+      "sample.txt" => <<~EOF,
+        foo+bar+baz
+      EOF
+      "morphology" => {
+        "compound" => lambda { |a, b|
+          calls_to_compound << [a, b]
+          a + b
+        }
+      },
+    })
+    expect(audition.run).to eq("foobarbaz")
+    expect(calls_to_compound).to eq([
+      ["foo", "bar"],
+      ["foobar", "baz"]
+    ])
+  end
+
   it "allows compound words in the lexicon" do
     audition = Audition.new({
       "lexicon.txt" => <<~EOF,
