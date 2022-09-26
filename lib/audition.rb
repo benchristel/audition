@@ -11,18 +11,7 @@ class Audition
       if line =~ /^>/
         line
       else
-        Text.new(line).tokens.map { |w|
-          gloss, *inflections = w.split("/")
-          word = translate(gloss)
-          inflections.reduce(word) { |w, inflection|
-            inflect = data["morphology"][inflection]
-            if inflect.nil?
-              w + "/" + inflection
-            else
-              inflect.call(w)
-            end
-          }
-        }.join("") 
+        Text.new(line).tokens.map(&method(:translate)).join("")
       end
     }.join("\n")
   end
@@ -37,9 +26,20 @@ class Audition
     word = lexicon[gloss] || gloss
     if word =~ /\+/
       translated_morphemes = word.split("+").map(&method(:translate))
-      word = data["morphology"]["compound"].call(*translated_morphemes)
+      data["morphology"]["compound"].call(*translated_morphemes)
+    elsif word =~ /\//
+      root, *inflections = word.split("/")
+      inflections.reduce(translate(root)) { |w, inflection|
+        inflect = data["morphology"][inflection]
+        if inflect.nil?
+          w + "/" + inflection
+        else
+          inflect.call(w)
+        end
+      }
+    else
+      word
     end
-    word
   end
 
   def lexicon

@@ -159,4 +159,21 @@ describe "Audition" do
     })
     expect(audition.run).to eq("fryn")
   end
+
+  it "allows inflections in the lexicon" do
+    audition = Audition.new({
+      "lexicon.txt" => <<~EOF,
+        visit   plef
+        visitor plef/AGT
+      EOF
+      "sample.txt" => <<~EOF,
+        visitor
+      EOF
+      "morphology" => {
+        "compound" => lambda { |a| a },
+        "AGT" => lambda { |w| "a" + w + "t" }
+      },
+    })
+    expect(audition.run).to eq("apleft")
+  end
 end
