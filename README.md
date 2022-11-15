@@ -31,18 +31,30 @@ to disambiguate a noun from a verb with the same spelling) or a linguistic
 abbreviation, like `DEF` for "definite article". Glosses are used in `.au` files
 to identify words to be translated. Glosses must contain only alphanumeric characters and `_` (underscore).
 
-The `translation` column should contain an `expression` for each gloss that describes
-how it should be translated into your conlang. The syntax of an expression is:
+The `translation` column should contain a _translation_ for each gloss, which describes
+how it should be translated into your conlang. The [PegJS](https://pegjs.org/online) syntax of a translation is:
 
 ```
-EXPRESSION
-  = "*" GLOSS                             # dereferencing
-  | TEXT                                  # literal text
-  | EXPRESSION "#" INFLECTION             # inflection
-  | "[" EXPRESSION ("+" + EXPRESSION)* "]" # compounding
+Translation
+  = stem:(Word / Dereference / Compound) inflections:InflectionList {
+    return {type: "inflection", stem, inflections}
+  }
+Dereference
+  = "*" gloss:Word {
+    return {type: "dereference", gloss}
+  }
+Compound
+  = "[" head:Translation tail:("+" Translation)* "]" {
+    return {type: "compound", parts: [head, ...tail.map(([_, tr]) => tr)]}
+  }
+InflectionList
+  = inflections:("#" Word)* {
+    return inflections.map(([_, name]) => name)
+  }
+Word = chars:[A-Za-z0-9_]+ { return text() }
 ```
 
-Examples of expressions:
+Examples of translations:
 
 ```
 *read#AGT
@@ -50,7 +62,7 @@ Examples of expressions:
 [*full+*seek#LENIT]#HON
 ```
 
-An expression may not contain whitespace.
+A translation may not contain whitespace.
 
 A `GLOSS` node should be identical to some gloss in the lexicon. An `INFLECTION`
 node should be the name of an inflection in the `morphology.yaml` file (discussed below).
@@ -144,6 +156,9 @@ The _evaluation_ of a token is:
 - if the token is a `inflection` expression with `#`, the result of applying the inflection's rules from `morphology.yaml` to the evaluation of the expression to the left of the `#`.
 - if the token is a `compound` expression, the concatenation of the evaluations of its subexpressions.
 
+
+The syntax of a token is almost the same as the syntax of a _translation_, above. However,
+there is no `dereference` node type; all stems are assumed to be glosses and implicitly dereferenced.
 
 ## Running `au`
 
