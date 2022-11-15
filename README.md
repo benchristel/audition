@@ -148,17 +148,56 @@ if it exists.
 ## Sample Files
 
 `.au` files are processed line-by-line. Lines that don't start with `>` are untouched. Lines that do start with `>` are translated. To translate a line, `au` first splits it into _tokens_, which are runs of characters that are either all word characters or all non-word characters (for the purposes of this description, a word character matches `[A-Za-z0-9_\+#\[\]`).
-Each token consisting of word characters is replaced by its _evaluation_ in the output file.
+Each token consisting of word characters (or _gloss_) is replaced by its _evaluation_ in the output file.
 
-The _evaluation_ of a token is:
+The _evaluation_ of a gloss is:
 
-- if the token is a simple word matching `[A-Za-z0-9_]+`, the evaluation of the translation found by looking up that word in the `gloss` column of the lexicon.
-- if the token is a `inflection` expression with `#`, the result of applying the inflection's rules from `morphology.yaml` to the evaluation of the expression to the left of the `#`.
-- if the token is a `compound` expression, the concatenation of the evaluations of its subexpressions.
-
+- if the gloss is a simple word matching `[A-Za-z0-9_]+`, the evaluation of the translation found by looking up that word in the `gloss` column of the lexicon.
+- if the gloss is a `inflection` expression with `#`, the result of applying the inflection's rules from `morphology.yaml` to the evaluation of the expression to the left of the `#`.
+- if the gloss is a `compound` expression, the concatenation of the evaluations of its subexpressions.
+- if the gloss is a `literal` expression starting with `^`, the string following the `^`.
 
 The syntax of a token is almost the same as the syntax of a _translation_, above. However,
-there is no `dereference` node type; all stems are assumed to be glosses and implicitly dereferenced.
+there is no `dereference` node type; all stems are assumed to be glosses and implicitly dereferenced. Here is a PegJS grammar that accounts for both translations and glosses, unifying them into an IR that can be evaluated the same way for both:
+
+```
+Gloss
+  = stem:(PointerWord / Literal / Compound) inflections:InflectionList {
+    if (inflections.length === 0) return stem
+    return {type: "inflection", stem, inflections}
+  }
+Translation
+  = stem:(LiteralWord / Pointer / Compound) inflections:InflectionList {
+    if (inflections.length === 0) return stem
+    return {type: "inflection", stem, inflections}
+  }
+Literal
+  = "^" string:Word {
+    return {type: "literal", string}
+  }
+Pointer
+  = "*" lexeme:Word {
+    return {type: "pointer", lexeme}
+  }
+InflectionList
+  = inflections:("#" Word)* {
+    return inflections.map(([_, name]) => name)
+  }
+LiteralWord
+  = string:Word {
+    return {type: "literal", string}
+  }
+PointerWord
+  = lexeme:Word {
+    return {type: "pointer", lexeme}
+  }
+Word = chars:[A-Za-z0-9_]+ { return text() }
+Compound
+  = "[" head:Translation tail:("+" Translation)* "]" {
+    return {type: "compound", parts: [head, ...tail.map(([_, tr]) => tr)]}
+  }
+```
+
 
 ## Running `au`
 
