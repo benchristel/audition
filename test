@@ -1,3 +1,0 @@
-#!/bin/bash
-
-rspec spec && (cd test-lang && diff -u expected.txt <(au))
