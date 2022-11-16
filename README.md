@@ -2,7 +2,11 @@
 
 Audition generates conlangs and translates sample texts.
 
-# Input Format
+## Dependencies
+
+You'll need to install `bun` to run the `au` and `test` programs in this repo.
+
+## Input Format
 
 An Audition project consists of a number of files:
 
@@ -21,15 +25,16 @@ same name as the input file, but with the `.au` extension dropped. So translatin
 
 ## Lexicon
 
-The lexicon is formatted as a CSV file, which must have a header row and at least
-three columns with the headers `gloss`, `translation`, and `generator`.
-It can include whatever other columns you like.
+The `lexicon.csv` file must have a header row, and at least
+three columns with the headers `id`, `translation`, and `generator`.
+It can include whatever other columns you like. Each row of `lexicon.csv` contains
+information about a _lexeme_ in your language.
 
-The `gloss` column should contain a unique, mnemonic identifier for each word in the lexicon.
-A gloss is usually an English word, perhaps with some modifications (like an `_n` suffix
+The `id` column should contain a unique, mnemonic identifier for the lexeme.
+A lexeme ID is usually an English word, perhaps with some modifications (like an `_n` suffix
 to disambiguate a noun from a verb with the same spelling) or a linguistic
-abbreviation, like `DEF` for "definite article". Glosses are used in `.au` files
-to identify words to be translated. Glosses must contain only alphanumeric characters and `_` (underscore).
+abbreviation, like `DEF` for "definite article". IDs are used in `.au` files
+to identify words to be translated. IDs must contain only alphanumeric characters and `_` (underscore).
 
 The `translation` column should contain a _translation_ for each gloss, which describes
 how it should be translated into your conlang. The [PegJS](https://pegjs.org/online) syntax of a translation is:
@@ -64,10 +69,10 @@ Examples of translations:
 
 A translation may not contain whitespace.
 
-A `GLOSS` node should be identical to some gloss in the lexicon. An `INFLECTION`
+A `Dereference` node should refer to some ID in the lexicon. An `INFLECTION`
 node should be the name of an inflection in the `morphology.yaml` file (discussed below).
 
-The compounding operation is right-associative, so `[A+B+C]` is the same as `[A+[B+C]]`. The inflection operation is left-associative.
+The compounding and inflection operations are both left-associative.
 
 ## Morphology
 
@@ -153,12 +158,12 @@ Each token consisting of word characters (or _gloss_) is replaced by its _evalua
 The _evaluation_ of a gloss is:
 
 - if the gloss is a simple word matching `[A-Za-z0-9_]+`, the evaluation of the translation found by looking up that word in the `gloss` column of the lexicon.
-- if the gloss is a `inflection` expression with `#`, the result of applying the inflection's rules from `morphology.yaml` to the evaluation of the expression to the left of the `#`.
+- if the gloss is a `inflection` expression with `#`, the result of applying the inflection's rules from `morphology.yaml` to the evaluation of the expression to the left of the last `#`.
 - if the gloss is a `compound` expression, the concatenation of the evaluations of its subexpressions.
 - if the gloss is a `literal` expression starting with `^`, the string following the `^`.
 
-The syntax of a token is almost the same as the syntax of a _translation_, above. However,
-there is no `dereference` node type; all stems are assumed to be glosses and implicitly dereferenced. Here is a PegJS grammar that accounts for both translations and glosses, unifying them into an IR that can be evaluated the same way for both:
+The syntax of a gloss is almost the same as the syntax of a _translation_, above. However,
+there is no `dereference` node type; all stems are assumed to be lexeme IDs and implicitly dereferenced. Here is a PegJS grammar that accounts for both translations and glosses, unifying them into an IR that can be evaluated the same way for both:
 
 ```
 Gloss
@@ -204,11 +209,11 @@ Compound
 Usage:
 
 ```
-au DIRECTORY
+au [-C DIRECTORY]
 ```
 
-If not specified, `DIRECTORY` defaults to the current working directory. `au` will
-operate on the files in that directory.
+`au` will operate on the files in the given `DIRECTORY`.
+If not specified, `DIRECTORY` defaults to the current working directory.
 
 `au` generates words for all rows in the `lexicon.csv` file whose `translation` columns
 are blank, modifying `lexicon.csv` in place. It also translates any `.au` files in
