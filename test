@@ -1,0 +1,1 @@
+bun "$(dirname "$0")"/src/run-tests.js

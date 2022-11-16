@@ -1,0 +1,14 @@
+{
+  "name": "audition",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:benchristel/audition.git",
+  "author": "Ben Christel <ben.christel@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@benchristel/taste": "^0.4.0"
+  },
+  "scripts": {
+    "test": "./test"
+  }
+}
