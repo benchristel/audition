@@ -6,3 +6,8 @@
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@benchristel/taste/-/taste-0.4.0.tgz#5a57aef5256a392b40e703133fadaacb3df88e13"
   integrity sha512-MK+IMkF1q7LgSp5JCCV49TKw07y3EF2Fh62B+qIKI76IAJDBis/URTTEXTyBeyK2YBfsEL8wbGBz8fVbO1UXDQ==
+
+typescript@^4.9.3:
+  version "4.9.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.3.tgz#3aea307c1746b8c384435d8ac36b8a2e580d85db"
+  integrity sha512-CIfGzTelbKNEnLpLdGFgdyKhG23CKdKgQPOBc+OUNrkJ2vr+KSzsSV5kq5iWhEQbok+quxgGzrAtGWCyU7tHnA==

@@ -6,7 +6,8 @@
   "author": "Ben Christel <ben.christel@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@benchristel/taste": "^0.4.0"
+    "@benchristel/taste": "^0.4.0",
+    "typescript": "^4.9.3"
   },
   "scripts": {
     "test": "./test"
