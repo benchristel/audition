@@ -1,6 +1,9 @@
-import {test, expect, equals, not} from "@benchristel/taste"
+import {test, expect, equals, not, which} from "@benchristel/taste"
 import {Expression} from "./expression"
-import {error, success, Result} from "./result"
+import {error, success, Result} from "./lib/result"
+import {parseCsv} from "./lib/csv"
+import {empty, setDiff} from "./lib/indexables"
+import {matches} from "./lib/strings"
 
 const REQUIRED_COLUMNS = ["id", "translation", "generator"]
 
@@ -17,35 +20,55 @@ export type Lexeme = {
 }
 
 test("parseLexicon", {
-  "given an empty string"() {
+  "fails given an empty string"() {
     expect(parseLexicon(""), equals, error("missing header row"))
   },
 
-  "given a blank string"() {
+  "fails given a blank string"() {
     expect(parseLexicon("   "), equals, error("missing header row"))
   },
 
-  "given empty lines"() {
+  "fails given empty lines"() {
     expect(parseLexicon("\n\n"), equals, error("missing header row"))
   },
 
-  "given a header that's missing all required columns"() {
+  "fails given a header that's missing all required columns"() {
     expect(
       parseLexicon("invalid"),
       equals(error("missing header columns: id, translation, generator")),
     )
   },
 
-  "given a header that's missing one required column"() {
+  "fails given a header that's missing one required column"() {
     expect(
       parseLexicon("id,generator"),
       equals(error("missing header columns: translation")),
     )
   },
 
-  "given a header with all required columns"() {
+  "succeeds given a header with all required columns"() {
     expect(
       parseLexicon("id,translation,generator"),
+      equals(success({
+        columnOrder: ["id", "translation", "generator"],
+        lexemes: [],
+      })),
+    )
+  },
+
+  "allows user-defined columns"() {
+    expect(
+      parseLexicon("foobar,id,translation,baz,generator,kludge"),
+      equals(success({
+        columnOrder: ["foobar", "id", "translation", "baz", "generator", "kludge"],
+        lexemes: [],
+      })),
+    )
+  },
+
+  "allows quoted column headers"() {
+    expect(
+      parseLexicon(`"id","translation","generator"`),
       equals(success({
         columnOrder: ["id", "translation", "generator"],
         lexemes: [],
@@ -55,35 +78,42 @@ test("parseLexicon", {
 })
 
 function parseLexicon(raw: string): Result<Lexicon> {
-  const lines = raw.split("\n")
-    .map(trim)
-    .filter(not(empty))
+  return Result.flatMap((rows: Array<Array<string>>) => {
+    const [headerRow, ...dataRows] = rows.filter(not(emptyRow))
+    if (headerRow == null) {
+      return error("missing header row")
+    }
 
-  if (empty(lines)) return error("missing header row")
-
-  const [headerLine, ...dataLines] = lines
-  // TODO: quoted headers
-  const headerRow = headerLine.split(",")
-
-  const missingHeaders = setDiff(REQUIRED_COLUMNS, headerRow)
-  if (!empty(missingHeaders)) {
-    return error(`missing header columns: ${missingHeaders.join(", ")}`)
-  }
-  
-  return success({
-    columnOrder: headerRow,
-    lexemes: [],
-  })
+    const missingHeaders = setDiff(REQUIRED_COLUMNS, headerRow)
+    if (!empty(missingHeaders)) {
+      return error(`missing header columns: ${missingHeaders.join(", ")}`)
+    }
+    
+    return success({
+      columnOrder: headerRow,
+      lexemes: [],
+    })
+  })(parseCsv(raw))
 }
 
-function trim(s: string): string {
-  return s.trim()
-}
+test("emptyRow", {
+  "is true for a row with one empty cell"() {
+    expect([""], emptyRow)
+  },
 
-function empty(s: string | Array<unknown>): boolean {
-  return s.length === 0
-}
+  "is false for a row with two empty cells"() {
+    expect(["", ""], not(emptyRow))
+  },
 
-function setDiff<T>(a: Array<T>, b: Array<T>): Array<T> {
-  return a.filter(item => !b.includes(item))
+  "is true for a row with one blank cell"() {
+    expect([" \t"], emptyRow)
+  },
+
+  "is false for a row with one non-blank cell"() {
+    expect([" foo "], not(emptyRow))
+  },
+})
+
+function emptyRow(row: Array<string>): boolean {
+  return equals([which(matches(/^\s*$/))], row)
 }

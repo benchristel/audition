@@ -34,7 +34,7 @@ declare module "@benchristel/taste" {
   export function is(a: any, b: any): boolean
   export function is(a: any): (b: any) => boolean
   export function not(predicate: Predicate): Predicate
-  export function which(predicate: Predicate): WhichMagic
+  export function which(predicate: Predicate): any
   export function runTests(
     a: TestList,
   ): Promise<{results: Array<TestResult>}>
@@ -44,8 +44,6 @@ declare module "@benchristel/taste" {
   export function debug(value: any): void
 
   type Predicate = (...args: Array<any>) => any
-  declare const isWhichMagic: unique symbol
-  type WhichMagic = {[isWhichMagic]: true}
   type TestList = Array<Test>
   type Test = {subject: string; scenario: string; fn: () => unknown}
   type TestResult = {
