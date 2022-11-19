@@ -2,9 +2,56 @@
 
 Audition generates conlangs and translates sample texts.
 
+## Overview
+
+Audition translates sample texts like this:
+
+```
+> 1SG Arwen. come#1SG 2OBJ help#INF.
+```
+
+Producing output like this:
+
+```
+> Im Arwen. Telin le thae.
+```
+
+Based on a lexicon file that looks like this:
+
+```csv
+id,translation,generator
+1SG,im,
+come,tol,
+help,tha,
+2OBJ,le,
+```
+
+...and a morphology file that looks like this:
+
+```yaml
+inflections:
+  1SG:
+    - ["o([^aeiouy])$", "e$1in"]
+```
+
 ## Dependencies
 
 You'll need to install `bun` to run the `au` and `test` programs in this repo.
+
+## Running `au`
+
+Usage:
+
+```
+au [-C DIRECTORY]
+```
+
+`au` will operate on the files in the given `DIRECTORY`.
+If not specified, `DIRECTORY` defaults to the current working directory.
+
+`au` generates words for all rows in the `lexicon.csv` file whose `translation` columns
+are blank, modifying `lexicon.csv` in place. It also translates any `.au` files in
+the given `DIRECTORY` or subdirectories, overwriting the corresponding output files.
 
 ## Input Format
 
@@ -203,18 +250,3 @@ Compound
   }
 ```
 
-
-## Running `au`
-
-Usage:
-
-```
-au [-C DIRECTORY]
-```
-
-`au` will operate on the files in the given `DIRECTORY`.
-If not specified, `DIRECTORY` defaults to the current working directory.
-
-`au` generates words for all rows in the `lexicon.csv` file whose `translation` columns
-are blank, modifying `lexicon.csv` in place. It also translates any `.au` files in
-the given `DIRECTORY` or subdirectories, overwriting the corresponding output files.
