@@ -1,7 +1,7 @@
 import { expect, test, equals, which } from "@benchristel/taste";
 import { success, error, Result } from "./result";
 // @ts-ignore
-import Parser from "./csv-parser";
+import Parser from "./generated/csv-parser";
 
 const parser = Parser()
 
@@ -95,51 +95,3 @@ test("parseCsv", {
 })
 
 const contains = (needle: string) => (haystack: string) => haystack.indexOf(needle) >= 0
-
-/*
-
-// PEG.js grammar
-
-CSV
-  = first:Row rest:(Newline Row)* Newline? {
-    return [first, ...rest.map(([_, row]) => row)]
-  }
-
-Row
-  = first:Cell rest:("," Cell)* {
-    return [first, ...rest.map(([_, cell]) => cell)]
-  }
-
-Cell
-  = QuotedCell
-  / UnquotedCell
-
-QuotedCell
-  = '"' chars:QuotedChar* '"' {
-    return chars.join("")
-  }
-
-QuotedChar
-  = LiteralChars
-  / EscapedQuote
-
-LiteralChars
-  = [^"]+ {
-    return text()
-  }
-
-EscapedQuote
-  = '""' {
-    return '"'
-  }
-
-UnquotedCell "text"
-  = chars:[^",\r\n]* {
-    return text()
-  }
-
-Newline "end of line"
-  = "\r\n"
-  / "\n"
-
-*/
