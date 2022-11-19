@@ -207,7 +207,7 @@ test("parseLexicon", {
   },
 })
 
-function parseLexicon(raw: string): Result<Lexicon> {
+export function parseLexicon(raw: string): Result<Lexicon> {
   return _(
     parseCsv(raw),
     Result.flatMap((rows: Array<Array<string>>) => {
