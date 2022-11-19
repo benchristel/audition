@@ -5,6 +5,7 @@ import {
   formatTestResultsAsText,
 } from "@benchristel/taste"
 import "./lexicon"
+import "./translator"
 
 test("the Taste suite", {
   runs() {
