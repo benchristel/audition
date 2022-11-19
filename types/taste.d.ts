@@ -3,6 +3,10 @@ declare module "@benchristel/taste" {
     f: (a1: A1, a2: A2) => Ret,
     name: string,
   ): Curried2<A1, A2, Ret>
+  export function curry<A1, A2, A3, Ret>(
+    f: (a1: A1, a2: A2, a3: A3) => Ret,
+    name: string,
+  ): Curried3<A1, A2, A3, Ret>
   export function equals(a: any, b: any): boolean
   export function equals(a: any): (b: any) => boolean
   export function test(
@@ -53,6 +57,9 @@ declare module "@benchristel/taste" {
   }
 }
 
-type Curried2<A1, A2> =
-  & ((a: A1) => (a: A2) => Ret)
-  & ((a: A1, b: A2) => Ret)
+type Curried2<A1, A2, Ret> = ((a: A1) => (a: A2) => Ret) &
+  ((a: A1, b: A2) => Ret)
+
+type Curried3<A2, A2, A3, Ret> = ((a: A1, b: A2, c: A3) => Ret) &
+  ((a: A1, b: A2) => (c: A3) => Ret) &
+  ((a: A1) => Curried2<A2, A3, Ret>)
