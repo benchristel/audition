@@ -4,22 +4,21 @@ import {parseCsv} from "./lib/csv"
 import {empty, setDiff} from "./lib/indexables"
 import {matches, trimMargin} from "./lib/strings"
 import "./lib/functions"
-import { _ } from "./lib/functions"
+import {_} from "./lib/functions"
 
 const REQUIRED_COLUMNS = ["id", "translation", "generator"]
 
 export type Lexicon = {
-  columnOrder: Array<string>,
-  lexemes: Array<Lexeme>,
+  columnOrder: Array<string>
+  lexemes: Array<Lexeme>
 }
 
 export type Lexeme = {
-  id: string,
-  translation: string,
-  generator: string,
-  userColumns: Array<string>,
+  id: string
+  translation: string
+  generator: string
+  userColumns: Array<string>
 }
-
 ;() => parseLexicon as (csv: string) => Result<Lexicon>
 
 test("parseLexicon", {
@@ -38,7 +37,9 @@ test("parseLexicon", {
   "fails given a header that's missing all required columns"() {
     expect(
       parseLexicon("invalid"),
-      equals(error("missing header columns: id, translation, generator")),
+      equals(
+        error("missing header columns: id, translation, generator"),
+      ),
     )
   },
 
@@ -52,30 +53,43 @@ test("parseLexicon", {
   "succeeds given a header with all required columns"() {
     expect(
       parseLexicon("id,translation,generator"),
-      equals(success({
-        columnOrder: ["id", "translation", "generator"],
-        lexemes: [],
-      })),
+      equals(
+        success({
+          columnOrder: ["id", "translation", "generator"],
+          lexemes: [],
+        }),
+      ),
     )
   },
 
   "allows user-defined columns"() {
     expect(
       parseLexicon("foobar,id,translation,baz,generator,kludge"),
-      equals(success({
-        columnOrder: ["foobar", "id", "translation", "baz", "generator", "kludge"],
-        lexemes: [],
-      })),
+      equals(
+        success({
+          columnOrder: [
+            "foobar",
+            "id",
+            "translation",
+            "baz",
+            "generator",
+            "kludge",
+          ],
+          lexemes: [],
+        }),
+      ),
     )
   },
 
   "allows quoted column headers"() {
     expect(
       parseLexicon(`"id","translation","generator"`),
-      equals(success({
-        columnOrder: ["id", "translation", "generator"],
-        lexemes: [],
-      })),
+      equals(
+        success({
+          columnOrder: ["id", "translation", "generator"],
+          lexemes: [],
+        }),
+      ),
     )
   },
 
@@ -88,10 +102,12 @@ test("parseLexicon", {
 
         `,
       ),
-      equals(success({
-        columnOrder: ["id", "translation", "generator"],
-        lexemes: [],
-      })),
+      equals(
+        success({
+          columnOrder: ["id", "translation", "generator"],
+          lexemes: [],
+        }),
+      ),
     )
   },
 
@@ -101,15 +117,17 @@ test("parseLexicon", {
         id,translation,generator
         foo,bar,baz`,
       parseLexicon,
-      Result.map(l => l.lexemes)
+      Result.map((l) => l.lexemes),
     )
 
-    const expected = success([{
-      id: "foo",
-      translation: "bar",
-      generator: "baz",
-      userColumns: [],
-    }])
+    const expected = success([
+      {
+        id: "foo",
+        translation: "bar",
+        generator: "baz",
+        userColumns: [],
+      },
+    ])
 
     expect(result, equals(expected))
   },
@@ -118,21 +136,22 @@ test("parseLexicon", {
     const csvContent = trimMargin`
       translation,generator,id
       foo,bar,the-id`
-    const lexicon = _(
-      csvContent,
-      parseLexicon
+    const lexicon = _(csvContent, parseLexicon)
+    expect(
+      lexicon,
+      equals,
+      success({
+        columnOrder: ["translation", "generator", "id"],
+        lexemes: [
+          {
+            id: "the-id",
+            translation: "foo",
+            generator: "bar",
+            userColumns: [],
+          },
+        ],
+      }),
     )
-    expect(lexicon, equals, success({
-      columnOrder: ["translation", "generator", "id"],
-      lexemes: [
-        {
-          id: "the-id",
-          translation: "foo",
-          generator: "bar",
-          userColumns: []
-        }
-      ]
-    }))
   },
 })
 
@@ -147,7 +166,9 @@ function parseLexicon(raw: string): Result<Lexicon> {
 
       const missingHeaders = setDiff(REQUIRED_COLUMNS, headerRow)
       if (!empty(missingHeaders)) {
-        return error(`missing header columns: ${missingHeaders.join(", ")}`)
+        return error(
+          `missing header columns: ${missingHeaders.join(", ")}`,
+        )
       }
 
       return success({
@@ -161,8 +182,8 @@ function parseLexicon(raw: string): Result<Lexicon> {
           }
         }),
       })
-    },
-  ))
+    }),
+  )
 }
 
 test("emptyRow", {

@@ -1,7 +1,7 @@
-import { expect, test, equals, which } from "@benchristel/taste";
-import { success, error, Result } from "./result";
+import {expect, test, equals, which} from "@benchristel/taste"
+import {success, error, Result} from "./result"
 // @ts-ignore
-import Parser from "./generated/csv-parser";
+import Parser from "./generated/csv-parser"
 
 const parser = Parser()
 
@@ -47,14 +47,14 @@ test("parseCsv", {
   "escapes quotes"() {
     expect(
       parseCsv('"a program that prints ""hello, world"""'),
-      equals(success([['a program that prints "hello, world"']]))
+      equals(success([['a program that prints "hello, world"']])),
     )
   },
 
   "does not allow spaces before quoted data"() {
     expect(
       parseCsv(' ""'),
-      equals(error(which(contains('Expected ","'))))
+      equals(error(which(contains('Expected ","')))),
     )
   },
 
@@ -73,25 +73,33 @@ test("parseCsv", {
   },
 
   "allows commas in quoted data"() {
-    expect(
-      parseCsv('"a,b"'),
-      equals(success([["a,b"]])),
-    )
+    expect(parseCsv('"a,b"'), equals(success([["a,b"]])))
   },
 
   "parses multiple lines"() {
     expect(
-      parseCsv('foo,bar\n123,456'),
-      equals(success([["foo", "bar"], ["123", "456"]]))
+      parseCsv("foo,bar\n123,456"),
+      equals(
+        success([
+          ["foo", "bar"],
+          ["123", "456"],
+        ]),
+      ),
     )
   },
 
   "allows Windows line endings"() {
     expect(
-      parseCsv('foo,bar\r\n123,456'),
-      equals(success([["foo", "bar"], ["123", "456"]]))
+      parseCsv("foo,bar\r\n123,456"),
+      equals(
+        success([
+          ["foo", "bar"],
+          ["123", "456"],
+        ]),
+      ),
     )
   },
 })
 
-const contains = (needle: string) => (haystack: string) => haystack.indexOf(needle) >= 0
+const contains = (needle: string) => (haystack: string) =>
+  haystack.indexOf(needle) >= 0

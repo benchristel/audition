@@ -3,7 +3,7 @@ export function empty(a: Array<unknown> | string): boolean {
 }
 
 export function setDiff<T>(a: Array<T>, b: Array<T>): Array<T> {
-  return a.filter(item => !b.includes(item))
+  return a.filter((item) => !b.includes(item))
 }
 
 export function lastOf(a: string): string

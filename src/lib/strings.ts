@@ -1,17 +1,23 @@
-import {curry, test, expect, is, equals, not} from "@benchristel/taste"
+import {
+  curry,
+  test,
+  expect,
+  is,
+  equals,
+  not,
+} from "@benchristel/taste"
 import {firstOf, lastOf} from "./indexables"
 import {Maybe} from "./maybe"
 
 export type Stringish = string | TemplateStringsArray
-
 ;() => isBlank as (s: string) => boolean
 ;() => lines as (s: Stringish) => Array<string>
-;() => matches as
-  & ((r: RegExp, s: string) => boolean)
-  & ((r: RegExp) => (s: string) => boolean)
-;() => removePrefix as
-  & ((prefix: string, s: string) => string)
-  & ((prefix: string) => (s: string) => string)
+;() =>
+  matches as ((r: RegExp, s: string) => boolean) &
+    ((r: RegExp) => (s: string) => boolean)
+;() =>
+  removePrefix as ((prefix: string, s: string) => string) &
+    ((prefix: string) => (s: string) => string)
 ;() => trimMargin as (s: Stringish) => string
 
 test("isBlank", {
@@ -30,7 +36,7 @@ test("isBlank", {
 
   "treats all whitespace characters as blank"() {
     expect(" \t\n\r", isBlank)
-  }
+  },
 })
 
 export function isBlank(s: string): boolean {
@@ -72,7 +78,8 @@ test("matches", {
 
 export const matches = curry(
   (regex: RegExp, s: string): boolean => regex.test(s),
-  "matches")
+  "matches",
+)
 
 test("trimMargin", {
   "trims multiline strings that are indented to align with surrounding code"() {
@@ -80,16 +87,24 @@ test("trimMargin", {
       def hello_from_python():
         print("Hello, world!")
     `
-    expect(trimmed, is, 'def hello_from_python():\n  print("Hello, world!")')
+    expect(
+      trimmed,
+      is,
+      'def hello_from_python():\n  print("Hello, world!")',
+    )
   },
-  
+
   "given an empty string"() {
     expect(trimMargin``, is, "")
   },
 
   "given a string with one line break and space"() {
-    expect(trimMargin`
-    `, is, "")
+    expect(
+      trimMargin`
+    `,
+      is,
+      "",
+    )
   },
 
   "given a string with no margin"() {
@@ -151,9 +166,7 @@ export function trimMargin(s: Stringish): string {
   const trimIndent = initialIndent
     ? removePrefix(initialIndent)
     : identity
-  return lns
-    .map(trimIndent)
-    .join("\n")
+  return lns.map(trimIndent).join("\n")
 }
 
 test("removePrefix", {
