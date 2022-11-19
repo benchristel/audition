@@ -115,15 +115,25 @@ test("parseLexicon", {
   },
 
   "respects column order"() {
-    // TODO: implement this
     const csvContent = trimMargin`
       translation,generator,id
       foo,bar,the-id`
-    const result = _(
+    const lexicon = _(
       csvContent,
       parseLexicon
     )
-  }
+    expect(lexicon, equals, success({
+      columnOrder: ["translation", "generator", "id"],
+      lexemes: [
+        {
+          id: "the-id",
+          translation: "foo",
+          generator: "bar",
+          userColumns: []
+        }
+      ]
+    }))
+  },
 })
 
 function parseLexicon(raw: string): Result<Lexicon> {
@@ -142,11 +152,11 @@ function parseLexicon(raw: string): Result<Lexicon> {
 
       return success({
         columnOrder: headerRow,
-        lexemes: dataRows.map(([a, b, c]) => {
+        lexemes: dataRows.map((cells) => {
           return {
-            id: a,
-            translation: b,
-            generator: c,
+            id: cells[headerRow.indexOf("id")],
+            translation: cells[headerRow.indexOf("translation")],
+            generator: cells[headerRow.indexOf("generator")],
             userColumns: [],
           }
         }),
