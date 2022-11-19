@@ -1,9 +1,10 @@
 import {test, expect, equals, not, which} from "@benchristel/taste"
-import {Expression} from "./expression"
 import {error, success, Result} from "./lib/result"
 import {parseCsv} from "./lib/csv"
 import {empty, setDiff} from "./lib/indexables"
-import {matches} from "./lib/strings"
+import {matches, trimMargin} from "./lib/strings"
+import "./lib/functions"
+import { _ } from "./lib/functions"
 
 const REQUIRED_COLUMNS = ["id", "translation", "generator"]
 
@@ -14,10 +15,12 @@ export type Lexicon = {
 
 export type Lexeme = {
   id: string,
-  translation: () => Expression,
+  translation: string,
   generator: string,
   userColumns: Array<string>,
 }
+
+;() => parseLexicon as (csv: string) => Result<Lexicon>
 
 test("parseLexicon", {
   "fails given an empty string"() {
@@ -75,25 +78,81 @@ test("parseLexicon", {
       })),
     )
   },
+
+  "ignores blank lines"() {
+    expect(
+      parseLexicon(
+        trimMargin`
+          id,translation,generator
+
+
+        `,
+      ),
+      equals(success({
+        columnOrder: ["id", "translation", "generator"],
+        lexemes: [],
+      })),
+    )
+  },
+
+  "parses a lexeme"() {
+    const result = _(
+      trimMargin`
+        id,translation,generator
+        foo,bar,baz`,
+      parseLexicon,
+      Result.map(l => l.lexemes)
+    )
+
+    const expected = success([{
+      id: "foo",
+      translation: "bar",
+      generator: "baz",
+      userColumns: [],
+    }])
+
+    expect(result, equals(expected))
+  },
+
+  "respects column order"() {
+    // TODO: implement this
+    const csvContent = trimMargin`
+      translation,generator,id
+      foo,bar,the-id`
+    const result = _(
+      csvContent,
+      parseLexicon
+    )
+  }
 })
 
 function parseLexicon(raw: string): Result<Lexicon> {
-  return Result.flatMap((rows: Array<Array<string>>) => {
-    const [headerRow, ...dataRows] = rows.filter(not(emptyRow))
-    if (headerRow == null) {
-      return error("missing header row")
-    }
+  return _(
+    parseCsv(raw),
+    Result.flatMap((rows: Array<Array<string>>) => {
+      const [headerRow, ...dataRows] = rows.filter(not(emptyRow))
+      if (headerRow == null) {
+        return error("missing header row")
+      }
 
-    const missingHeaders = setDiff(REQUIRED_COLUMNS, headerRow)
-    if (!empty(missingHeaders)) {
-      return error(`missing header columns: ${missingHeaders.join(", ")}`)
-    }
-    
-    return success({
-      columnOrder: headerRow,
-      lexemes: [],
-    })
-  })(parseCsv(raw))
+      const missingHeaders = setDiff(REQUIRED_COLUMNS, headerRow)
+      if (!empty(missingHeaders)) {
+        return error(`missing header columns: ${missingHeaders.join(", ")}`)
+      }
+
+      return success({
+        columnOrder: headerRow,
+        lexemes: dataRows.map(([a, b, c]) => {
+          return {
+            id: a,
+            translation: b,
+            generator: c,
+            userColumns: [],
+          }
+        }),
+      })
+    },
+  ))
 }
 
 test("emptyRow", {
