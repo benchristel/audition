@@ -1,4 +1,11 @@
-import {test, expect, equals, not, which} from "@benchristel/taste"
+import {
+  test,
+  expect,
+  equals,
+  not,
+  which,
+  curry,
+} from "@benchristel/taste"
 import {error, success, Result} from "./lib/result"
 import {parseCsv} from "./lib/csv"
 import {empty, setDiff} from "./lib/indexables"
@@ -175,6 +182,29 @@ test("parseLexicon", {
       }),
     )
   },
+
+  "allows rows with too few columns"() {
+    const csvContent = trimMargin`
+      id,translation,generator,my-column
+      foo,bar`
+    const lexemes = _(
+      csvContent,
+      parseLexicon,
+      Result.map((l) => l.lexemes),
+    )
+    expect(
+      lexemes,
+      equals,
+      success([
+        {
+          id: "foo",
+          translation: "bar",
+          generator: "",
+          userColumns: [""],
+        },
+      ]),
+    )
+  },
 })
 
 function parseLexicon(raw: string): Result<Lexicon> {
@@ -204,16 +234,16 @@ function parseLexicon(raw: string): Result<Lexicon> {
 
       return success({
         columnOrder: headerRow,
-        lexemes: dataRows.map((cells) => {
-          return {
+        lexemes: dataRows
+          .map(fill("", headerRow.length))
+          .map((cells) => ({
             id: cells[idColumnIndex],
             translation: cells[translationColumnIndex],
             generator: cells[generatorColumnIndex],
             userColumns: cells.filter(
               (item, i) => !appColumnIndices.includes(i),
             ),
-          }
-        }),
+          })),
       })
     }),
   )
@@ -240,3 +270,42 @@ test("emptyRow", {
 function emptyRow(row: Array<string>): boolean {
   return equals([which(matches(/^\s*$/))], row)
 }
+
+test("fill", {
+  "fills an array with a value, up to the specified length"() {
+    const fillFoo3 = fill("foo", 3)
+    expect(fillFoo3(["bar"]), equals, ["bar", "foo", "foo"])
+  },
+
+  "does not mutate the array"() {
+    const array = ["bar"]
+    fill("foo", 3)(array)
+    expect(array, equals, ["bar"])
+  },
+
+  "does nothing if the requested length is 0"() {
+    expect(fill("foo", 0)([]), equals, [])
+  },
+
+  "does nothing if the requested length is negative"() {
+    expect(fill("foo", -99)([]), equals, [])
+  },
+
+  "does nothing if the array is already the desired length"() {
+    expect(fill("foo", 1)(["bar"]), equals, ["bar"])
+  },
+
+  "does nothing if the array is longer than the desired length"() {
+    expect(fill("foo", 1)(["bar", "baz"]), equals, ["bar", "baz"])
+  },
+})
+
+const fill =
+  <T>(filler: T, length: number) =>
+  (array: Array<T>): Array<T> => {
+    const copy = [...array]
+    for (let i = 0; i < length - array.length; i++) {
+      copy.push(filler)
+    }
+    return copy
+  }
