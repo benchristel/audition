@@ -153,6 +153,28 @@ test("parseLexicon", {
       }),
     )
   },
+
+  "reflects data from user-defined columns"() {
+    const csvContent = trimMargin`
+      translation,generator,id,my-column
+      foo,bar,the-id,my-data`
+    const lexicon = _(csvContent, parseLexicon)
+    expect(
+      lexicon,
+      equals,
+      success({
+        columnOrder: ["translation", "generator", "id", "my-column"],
+        lexemes: [
+          {
+            id: "the-id",
+            translation: "foo",
+            generator: "bar",
+            userColumns: ["my-data"],
+          },
+        ],
+      }),
+    )
+  },
 })
 
 function parseLexicon(raw: string): Result<Lexicon> {
@@ -171,14 +193,25 @@ function parseLexicon(raw: string): Result<Lexicon> {
         )
       }
 
+      const idColumnIndex = headerRow.indexOf("id")
+      const translationColumnIndex = headerRow.indexOf("translation")
+      const generatorColumnIndex = headerRow.indexOf("generator")
+      const appColumnIndices = [
+        idColumnIndex,
+        translationColumnIndex,
+        generatorColumnIndex,
+      ]
+
       return success({
         columnOrder: headerRow,
         lexemes: dataRows.map((cells) => {
           return {
-            id: cells[headerRow.indexOf("id")],
-            translation: cells[headerRow.indexOf("translation")],
-            generator: cells[headerRow.indexOf("generator")],
-            userColumns: [],
+            id: cells[idColumnIndex],
+            translation: cells[translationColumnIndex],
+            generator: cells[generatorColumnIndex],
+            userColumns: cells.filter(
+              (item, i) => !appColumnIndices.includes(i),
+            ),
           }
         }),
       })
