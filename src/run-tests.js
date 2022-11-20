@@ -7,12 +7,6 @@ import {
 import "./lexicon"
 import "./translator"
 
-test("the Taste suite", {
-  runs() {
-    expect(true, is, true)
-  },
-})
-
 runTests(getAllTests())
   .then(formatTestResultsAsText)
   .then(console.log)
