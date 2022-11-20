@@ -256,9 +256,7 @@ export function parseLexicon(raw: string): Result<Lexicon> {
               ),
               generator: success(cells[generatorColumnIndex]),
               userColumns: success(
-                cells.filter(
-                  (item, i) => !appColumnIndices.includes(i),
-                ),
+                cells.filter((_, i) => !appColumnIndices.includes(i)),
               ),
             }),
           ),
