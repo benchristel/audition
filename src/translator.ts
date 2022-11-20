@@ -3,6 +3,7 @@ import {Lexeme} from "./lexicon"
 import {_} from "./lib/functions"
 import {M, Maybe} from "./lib/maybe"
 import {Gloss, literal, pointer} from "./gloss"
+import {prop} from "./lib/objects"
 
 type TranslateFn = (gloss: string) => string
 ;() => Translator as (l: Array<Lexeme>) => TranslateFn
@@ -69,11 +70,6 @@ function Translator(lexemes: Array<Lexeme>): TranslateFn {
     }
   }
 }
-
-const prop =
-  <P extends string>(path: P) =>
-  <V>(obj: {[p in P]: V} & {[key: string]: any}): V =>
-    obj[path]
 
 function lexeme(id: string, translation: Gloss): Lexeme {
   return {
