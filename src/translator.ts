@@ -1,5 +1,6 @@
 import {expect, is, test} from "@benchristel/taste"
 import {Lexeme} from "./lexicon"
+import "./gloss"
 
 type TranslateFn = (gloss: string) => string
 ;() => Translator as (l: Array<Lexeme>) => TranslateFn

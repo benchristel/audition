@@ -3,3 +3,8 @@
 node_modules/.bin/pegjs \
   -o src/lib/generated/csv-parser.js \
   src/lib/csv.pegjs
+
+node_modules/.bin/pegjs \
+  -o src/generated/gloss-parser.js \
+  --allowed-start-rules Gloss,Translation \
+  src/gloss.pegjs
