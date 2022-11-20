@@ -21,6 +21,10 @@ export type Lexeme = {
   generator: string
   userColumns: Array<string>
 }
+
+export type LexiconIndex = {
+  [id: string]: Gloss
+}
 ;() => parseLexicon as (csv: string) => Result<Lexicon>
 
 test("parseLexicon", {
@@ -265,6 +269,10 @@ export function parseLexicon(raw: string): Result<Lexicon> {
       })
     }),
   )
+}
+
+export function indexEntry(lexeme: Lexeme): [string, Gloss] {
+  return [lexeme.id, lexeme.translation]
 }
 
 test("emptyRow", {

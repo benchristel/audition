@@ -5,4 +5,14 @@ export namespace Maybe {
     f: (arg: NonNullable<In>) => Out,
   ) => (maybe: M<In>) => M<Out> = (f) => (arg) =>
     arg == null ? null : f(arg)
+
+  export const recover =
+    <T>(_default: T) =>
+    (maybe: M<T>): T => {
+      if (maybe != null) {
+        return maybe
+      } else {
+        return _default
+      }
+    }
 }
