@@ -1,9 +1,9 @@
 import {expect, is, test} from "@benchristel/taste"
-import {indexEntry, Lexeme, LexiconIndex} from "./lexicon"
+import {LexiconIndex} from "./lexicon"
 import {_} from "./lib/functions"
-import {M, Maybe} from "./lib/maybe"
+import {Maybe} from "./lib/maybe"
 import {compound, Gloss, inflection, literal, pointer} from "./gloss"
-import {get, prop} from "./lib/objects"
+import {get} from "./lib/objects"
 import {exhausted} from "./lib/exhaust"
 import {Morphology, replace} from "./morphology"
 
