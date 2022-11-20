@@ -6,23 +6,36 @@ import {matches} from "./lib/strings"
 
 const glossParser = GlossParser()
 
-type Gloss =
-  | {type: "literal"; string: string}
-  | {type: "pointer"; lexeme: string}
-  | {type: "inflection"; stem: Gloss; inflections: Array<string>}
-  | {type: "compound"; elements: Array<Gloss>}
-;() =>
+type Gloss = Literal | Pointer | Inflection | Compound
+
+type Literal = {type: "literal"; string: string}
+type Pointer = {type: "pointer"; lexeme: string}
+type Inflection = {
+  type: "inflection"
+  stem: Gloss
+  inflections: Array<string>
+}
+type Compound = {type: "compound"; elements: Array<Gloss>}
+;() => {
   parseGloss as (
     mode: "implicit-pointers" | "implicit-literals",
     raw: string,
   ) => Result<Gloss>
+  literal as (s: string) => Literal
+  pointer as (lexeme: string) => Pointer
+  inflection as (
+    stem: Gloss,
+    inflections: Array<string>,
+  ) => Inflection
+  compound as (elements: Array<Gloss>) => Gloss
+}
 
 test("parseGloss", {
   "parses a word"() {
     expect(
       parseGloss("implicit-literals", "foo"),
       equals,
-      success({type: "literal", string: "foo"} as Gloss),
+      success(literal("foo")),
     )
   },
 
@@ -30,7 +43,7 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-pointers", "foo"),
       equals,
-      success({type: "pointer", lexeme: "foo"} as Gloss),
+      success(pointer("foo")),
     )
   },
 
@@ -38,7 +51,7 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-literals", ""),
       equals,
-      success({type: "literal", string: ""} as Gloss),
+      success(literal("")),
     )
   },
 
@@ -46,7 +59,7 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-literals", "*foo"),
       equals,
-      success({type: "pointer", lexeme: "foo"} as Gloss),
+      success(pointer("foo")),
     )
   },
 
@@ -54,7 +67,7 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-pointers", "^foo"),
       equals,
-      success({type: "literal", string: "foo"} as Gloss),
+      success(literal("foo")),
     )
   },
 
@@ -62,11 +75,7 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-pointers", "see#PAST"),
       equals,
-      success({
-        type: "inflection",
-        stem: {type: "pointer", lexeme: "see"},
-        inflections: ["PAST"],
-      } as Gloss),
+      success(inflection(pointer("see"), ["PAST"])),
     )
   },
 
@@ -74,11 +83,7 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-pointers", "see#PAST#1SG"),
       equals,
-      success({
-        type: "inflection",
-        stem: {type: "pointer", lexeme: "see"},
-        inflections: ["PAST", "1SG"],
-      } as Gloss),
+      success(inflection(pointer("see"), ["PAST", "1SG"])),
     )
   },
 
@@ -86,13 +91,7 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-literals", "[pre+*see]"),
       equals,
-      success({
-        type: "compound",
-        elements: [
-          {type: "literal", string: "pre"},
-          {type: "pointer", lexeme: "see"},
-        ],
-      } as Gloss),
+      success(compound([literal("pre"), pointer("see")])),
     )
   },
 
@@ -100,13 +99,7 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-pointers", "[^pre+see]"),
       equals,
-      success({
-        type: "compound",
-        elements: [
-          {type: "literal", string: "pre"},
-          {type: "pointer", lexeme: "see"},
-        ],
-      } as Gloss),
+      success(compound([literal("pre"), pointer("see")])),
     )
   },
 
@@ -114,22 +107,16 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-pointers", "[^pre+^hyen#INC+AGT]#PL"),
       equals,
-      success({
-        type: "inflection",
-        stem: {
-          type: "compound",
-          elements: [
-            {type: "literal", string: "pre"},
-            {
-              type: "inflection",
-              stem: {type: "literal", string: "hyen"},
-              inflections: ["INC"],
-            },
-            {type: "pointer", lexeme: "AGT"},
-          ],
-        },
-        inflections: ["PL"],
-      } as Gloss),
+      success(
+        inflection(
+          compound([
+            literal("pre"),
+            inflection(literal("hyen"), ["INC"]),
+            pointer("AGT"),
+          ]),
+          ["PL"],
+        ),
+      ),
     )
   },
 
@@ -153,4 +140,23 @@ function parseGloss(
   } catch (e: any) {
     return error(`Failed to parse "${s}": ` + e.message)
   }
+}
+
+export function literal(string: string): Literal {
+  return {type: "literal", string}
+}
+
+export function pointer(lexeme: string): Pointer {
+  return {type: "pointer", lexeme}
+}
+
+export function inflection(
+  stem: Gloss,
+  inflections: Array<string>,
+): Inflection {
+  return {type: "inflection", stem, inflections}
+}
+
+export function compound(elements: Array<Gloss>): Gloss {
+  return {type: "compound", elements}
 }
