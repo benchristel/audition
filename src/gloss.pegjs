@@ -1,10 +1,10 @@
-Gloss
-  = stem:(Literal / CompoundWithImplicitPointers / PointerWord) inflections:InflectionList {
+GlossWithImplicitPointers
+  = stem:(Literal / CompoundWithImplicitPointers / ImplicitPointer) inflections:InflectionList {
     if (inflections.length === 0) return stem
     return {type: "inflection", stem, inflections}
   }
-Translation
-  = stem:(Pointer / CompoundWithImplicitLiterals / LiteralWord) inflections:InflectionList {
+GlossWithImplicitLiterals
+  = stem:(Pointer / CompoundWithImplicitLiterals / ImplicitLiteral) inflections:InflectionList {
     if (inflections.length === 0) return stem
     return {type: "inflection", stem, inflections}
   }
@@ -20,20 +20,20 @@ InflectionList
   = inflections:("#" Word)* {
     return inflections.map(([_, name]) => name)
   }
-LiteralWord
+ImplicitLiteral
   = string:Word {
     return {type: "literal", string}
   }
-PointerWord
+ImplicitPointer
   = lexeme:Word {
     return {type: "pointer", lexeme}
   }
 Word = chars:[A-Za-z0-9_]* { return text() }
 CompoundWithImplicitLiterals
-  = "[" head:Translation tail:("+" Translation)* "]" {
+  = "[" head:GlossWithImplicitLiterals tail:("+" GlossWithImplicitLiterals)* "]" {
     return {type: "compound", elements: [head, ...tail.map(([_, tr]) => tr)]}
   }
 CompoundWithImplicitPointers
-  = "[" head:Gloss tail:("+" Gloss)* "]" {
+  = "[" head:GlossWithImplicitPointers tail:("+" GlossWithImplicitPointers)* "]" {
     return {type: "compound", elements: [head, ...tail.map(([_, g]) => g)]}
   }

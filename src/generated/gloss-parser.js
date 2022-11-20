@@ -162,10 +162,10 @@ function peg$parse(input, options) {
 
   var peg$FAILED = {},
     peg$startRuleFunctions = {
-      Gloss: peg$parseGloss,
-      Translation: peg$parseTranslation,
+      GlossWithImplicitLiterals: peg$parseGlossWithImplicitLiterals,
+      GlossWithImplicitPointers: peg$parseGlossWithImplicitPointers,
     },
-    peg$startRuleFunction = peg$parseGloss,
+    peg$startRuleFunction = peg$parseGlossWithImplicitLiterals,
     peg$c0 = function (stem, inflections) {
       if (inflections.length === 0) return stem
       return {type: "inflection", stem, inflections}
@@ -363,7 +363,7 @@ function peg$parse(input, options) {
     )
   }
 
-  function peg$parseGloss() {
+  function peg$parseGlossWithImplicitPointers() {
     var s0, s1, s2
 
     s0 = peg$currPos
@@ -371,7 +371,7 @@ function peg$parse(input, options) {
     if (s1 === peg$FAILED) {
       s1 = peg$parseCompoundWithImplicitPointers()
       if (s1 === peg$FAILED) {
-        s1 = peg$parsePointerWord()
+        s1 = peg$parseImplicitPointer()
       }
     }
     if (s1 !== peg$FAILED) {
@@ -392,7 +392,7 @@ function peg$parse(input, options) {
     return s0
   }
 
-  function peg$parseTranslation() {
+  function peg$parseGlossWithImplicitLiterals() {
     var s0, s1, s2
 
     s0 = peg$currPos
@@ -400,7 +400,7 @@ function peg$parse(input, options) {
     if (s1 === peg$FAILED) {
       s1 = peg$parseCompoundWithImplicitLiterals()
       if (s1 === peg$FAILED) {
-        s1 = peg$parseLiteralWord()
+        s1 = peg$parseImplicitLiteral()
       }
     }
     if (s1 !== peg$FAILED) {
@@ -546,7 +546,7 @@ function peg$parse(input, options) {
     return s0
   }
 
-  function peg$parseLiteralWord() {
+  function peg$parseImplicitLiteral() {
     var s0, s1
 
     s0 = peg$currPos
@@ -560,7 +560,7 @@ function peg$parse(input, options) {
     return s0
   }
 
-  function peg$parsePointerWord() {
+  function peg$parseImplicitPointer() {
     var s0, s1
 
     s0 = peg$currPos
@@ -623,7 +623,7 @@ function peg$parse(input, options) {
       }
     }
     if (s1 !== peg$FAILED) {
-      s2 = peg$parseTranslation()
+      s2 = peg$parseGlossWithImplicitLiterals()
       if (s2 !== peg$FAILED) {
         s3 = []
         s4 = peg$currPos
@@ -637,7 +637,7 @@ function peg$parse(input, options) {
           }
         }
         if (s5 !== peg$FAILED) {
-          s6 = peg$parseTranslation()
+          s6 = peg$parseGlossWithImplicitLiterals()
           if (s6 !== peg$FAILED) {
             s5 = [s5, s6]
             s4 = s5
@@ -662,7 +662,7 @@ function peg$parse(input, options) {
             }
           }
           if (s5 !== peg$FAILED) {
-            s6 = peg$parseTranslation()
+            s6 = peg$parseGlossWithImplicitLiterals()
             if (s6 !== peg$FAILED) {
               s5 = [s5, s6]
               s4 = s5
@@ -723,7 +723,7 @@ function peg$parse(input, options) {
       }
     }
     if (s1 !== peg$FAILED) {
-      s2 = peg$parseGloss()
+      s2 = peg$parseGlossWithImplicitPointers()
       if (s2 !== peg$FAILED) {
         s3 = []
         s4 = peg$currPos
@@ -737,7 +737,7 @@ function peg$parse(input, options) {
           }
         }
         if (s5 !== peg$FAILED) {
-          s6 = peg$parseGloss()
+          s6 = peg$parseGlossWithImplicitPointers()
           if (s6 !== peg$FAILED) {
             s5 = [s5, s6]
             s4 = s5
@@ -762,7 +762,7 @@ function peg$parse(input, options) {
             }
           }
           if (s5 !== peg$FAILED) {
-            s6 = peg$parseGloss()
+            s6 = peg$parseGlossWithImplicitPointers()
             if (s6 !== peg$FAILED) {
               s5 = [s5, s6]
               s4 = s5

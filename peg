@@ -6,5 +6,5 @@ node_modules/.bin/pegjs \
 
 node_modules/.bin/pegjs \
   -o src/generated/gloss-parser.js \
-  --allowed-start-rules Gloss,Translation \
+  --allowed-start-rules GlossWithImplicitLiterals,GlossWithImplicitPointers \
   src/gloss.pegjs

@@ -134,7 +134,9 @@ function parseGloss(
   s: string,
 ): Result<Gloss> {
   const startRule =
-    mode === "implicit-pointers" ? "Gloss" : "Translation"
+    mode === "implicit-pointers"
+      ? "GlossWithImplicitPointers"
+      : "GlossWithImplicitLiterals"
   try {
     return success(glossParser.parse(s, {startRule}))
   } catch (e: any) {
