@@ -3,7 +3,7 @@ import {indexEntry, Lexeme, LexiconIndex} from "./lexicon"
 import {_} from "./lib/functions"
 import {M, Maybe} from "./lib/maybe"
 import {compound, Gloss, inflection, literal, pointer} from "./gloss"
-import {prop} from "./lib/objects"
+import {get, prop} from "./lib/objects"
 import {exhausted} from "./lib/exhaust"
 import {Morphology, replace} from "./morphology"
 
@@ -132,9 +132,3 @@ function Translator(
     return `(${s}??)`
   }
 }
-
-const get =
-  (key: string) =>
-  <V>(obj: {[key: string]: V}): M<V> => {
-    return obj[key]
-  }
