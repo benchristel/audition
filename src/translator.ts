@@ -9,12 +9,17 @@ type TranslateFn = (gloss: Gloss) => string
 ;() => Translator as (lexiconIndex: LexiconIndex) => TranslateFn
 
 test("a Translator", {
+  "translates literals to themselves"() {
+    const translate = Translator({})
+    expect(translate(literal("foo")), is, "foo")
+  },
+
   "leaves unrecognized words untranslated, and marks them"() {
     const translate = Translator({})
     expect(translate(pointer("dog")), is, "(dog??)")
   },
 
-  "translates a lexeme id into its translation"() {
+  "translates a pointer into its referent"() {
     const translate = Translator({dog: literal("kanu")})
     expect(translate(pointer("dog")), is, "kanu")
   },
@@ -30,7 +35,7 @@ test("a Translator", {
     expect(translate(pointer("stone")), is, "pedra")
   },
 
-  "follows pointers"() {
+  "follows pointers in the lexicon"() {
     const translate = Translator({
       dog: literal("kanu"),
       hound: pointer("dog"),
