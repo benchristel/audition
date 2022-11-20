@@ -53,6 +53,15 @@ If not specified, `DIRECTORY` defaults to the current working directory.
 are blank, modifying `lexicon.csv` in place. It also translates any `.au` files in
 the given `DIRECTORY` or subdirectories, overwriting the corresponding output files.
 
+## Development
+
+Run `yarn husky install` after cloning the repo, to set up git hooks. There's a pre-commit
+hook that auto-formats changed files.
+
+`yarn test` or `./test` runs the tests.
+
+`yarn peg` generates parsers from `*.pegjs` sources.
+
 ## Input Format
 
 An Audition project consists of a number of files:
@@ -132,7 +141,7 @@ inflections:
     - ["(?<=[^aeiou])$", "ion"]
 ```
 
-This file describes one inflection, named `PAST`, with two *rules*. The first
+This file describes one inflection, named `PAST`, with two _rules_. The first
 rule adds a `n` suffix to words ending in a vowel. The second rule adds an `ion`
 suffix to words ending in a non-vowel. The first item in each rule array is a
 regular expression to be matched against the word being inflected. The second
@@ -182,7 +191,7 @@ root:
 
 syl:
 [C][V]*4
-[C][V][C] 
+[C][V][C]
 [V][C]*0.7
 [V]*0.2
 
@@ -249,4 +258,3 @@ Compound
     return {type: "compound", parts: [head, ...tail.map(([_, tr]) => tr)]}
   }
 ```
-
