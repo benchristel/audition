@@ -51,7 +51,26 @@ test("Result.flatMap returns a function that", {
   },
 })
 
+test("Result.objAll", {
+  "is typesafe"() {
+    const a: Result<{a: number; b: string}> = Result.objAll({
+      a: success(1),
+      b: error("uh oh"),
+    })
+    // @ts-expect-error
+    const b: Result<{a: string; b: string}> = Result.objAll({
+      a: success(1),
+      b: error("uh oh"),
+    })
+  },
+})
+
 export namespace Result {
+  export type Value<T extends Result<any>> = Extract<
+    T,
+    {type: "success"}
+  >["value"]
+
   export const map: <I, O>(
     f: (arg: I) => O,
   ) => (result: Result<I>) => Result<O> = (f) => {
@@ -76,5 +95,33 @@ export namespace Result {
           return r
       }
     }
+  }
+
+  export function all<T>(
+    results: Array<Result<T>>,
+  ): Result<Array<T>> {
+    const successes = []
+    for (const r of results) {
+      if (r.type === "success") {
+        successes.push(r.value)
+      } else {
+        return r
+      }
+    }
+    return success(successes)
+  }
+
+  export function objAll<T extends {[key: string]: Result<any>}>(
+    results: T,
+  ): Result<{[Property in keyof T]: Value<T[Property]>}> {
+    const successes: any = {}
+    for (const [k, v] of Object.entries(results)) {
+      if (v.type === "success") {
+        successes[k] = v.value
+      } else {
+        return v
+      }
+    }
+    return success(successes)
   }
 }

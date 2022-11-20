@@ -1,17 +1,11 @@
-import {
-  test,
-  expect,
-  equals,
-  not,
-  which,
-  curry,
-} from "@benchristel/taste"
+import {test, expect, equals, not, which} from "@benchristel/taste"
 import {error, success, Result} from "./lib/result"
 import {parseCsv} from "./lib/csv"
 import {empty, setDiff} from "./lib/indexables"
 import {matches, trimMargin} from "./lib/strings"
 import "./lib/functions"
 import {_} from "./lib/functions"
+import {Gloss, literal, parseGloss} from "./gloss"
 
 const REQUIRED_COLUMNS = ["id", "translation", "generator"]
 
@@ -22,7 +16,7 @@ export type Lexicon = {
 
 export type Lexeme = {
   id: string
-  translation: string
+  translation: Gloss
   generator: string
   userColumns: Array<string>
 }
@@ -130,7 +124,7 @@ test("parseLexicon", {
     const expected = success([
       {
         id: "foo",
-        translation: "bar",
+        translation: literal("bar"),
         generator: "baz",
         userColumns: [],
       },
@@ -152,7 +146,7 @@ test("parseLexicon", {
         lexemes: [
           {
             id: "the-id",
-            translation: "foo",
+            translation: literal("foo"),
             generator: "bar",
             userColumns: [],
           },
@@ -174,7 +168,7 @@ test("parseLexicon", {
         lexemes: [
           {
             id: "the-id",
-            translation: "foo",
+            translation: literal("foo"),
             generator: "bar",
             userColumns: ["my-data"],
           },
@@ -198,11 +192,29 @@ test("parseLexicon", {
       success([
         {
           id: "foo",
-          translation: "bar",
+          translation: literal("bar"),
           generator: "",
           userColumns: [""],
         },
       ]),
+    )
+  },
+
+  "fails if a translation can't be parsed"() {
+    const csvContent = trimMargin`
+      id,translation,generator,my-column
+      foo,spaces aren't allowed,bar`
+    const lexemes = _(
+      csvContent,
+      parseLexicon,
+      Result.map((l) => l.lexemes),
+    )
+    expect(
+      lexemes,
+      equals,
+      error(
+        which(matches(/Failed to parse "spaces aren't allowed"/)),
+      ),
     )
   },
 })
@@ -232,18 +244,25 @@ export function parseLexicon(raw: string): Result<Lexicon> {
         generatorColumnIndex,
       ]
 
-      return success({
-        columnOrder: headerRow,
-        lexemes: dataRows
-          .map(fill("", headerRow.length))
-          .map((cells) => ({
-            id: cells[idColumnIndex],
-            translation: cells[translationColumnIndex],
-            generator: cells[generatorColumnIndex],
-            userColumns: cells.filter(
-              (item, i) => !appColumnIndices.includes(i),
-            ),
-          })),
+      return Result.objAll({
+        columnOrder: success(headerRow),
+        lexemes: Result.all(
+          dataRows.map(fill("", headerRow.length)).map((cells) =>
+            Result.objAll({
+              id: success(cells[idColumnIndex]),
+              translation: parseGloss(
+                "implicit-literals",
+                cells[translationColumnIndex],
+              ),
+              generator: success(cells[generatorColumnIndex]),
+              userColumns: success(
+                cells.filter(
+                  (item, i) => !appColumnIndices.includes(i),
+                ),
+              ),
+            }),
+          ),
+        ),
       })
     }),
   )

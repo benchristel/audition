@@ -6,16 +6,16 @@ import {matches} from "./lib/strings"
 
 const glossParser = GlossParser()
 
-type Gloss = Literal | Pointer | Inflection | Compound
+export type Gloss = Literal | Pointer | Inflection | Compound
 
-type Literal = {type: "literal"; string: string}
-type Pointer = {type: "pointer"; lexeme: string}
-type Inflection = {
+export type Literal = {type: "literal"; string: string}
+export type Pointer = {type: "pointer"; lexeme: string}
+export type Inflection = {
   type: "inflection"
   stem: Gloss
   inflections: Array<string>
 }
-type Compound = {type: "compound"; elements: Array<Gloss>}
+export type Compound = {type: "compound"; elements: Array<Gloss>}
 ;() => {
   parseGloss as (
     mode: "implicit-pointers" | "implicit-literals",
@@ -129,7 +129,7 @@ test("parseGloss", {
   },
 })
 
-function parseGloss(
+export function parseGloss(
   mode: "implicit-pointers" | "implicit-literals",
   s: string,
 ): Result<Gloss> {
