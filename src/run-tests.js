@@ -6,6 +6,7 @@ import {
 } from "@benchristel/taste"
 import "./lexicon"
 import "./translator"
+import "./lib/mold"
 
 runTests(getAllTests())
   .then(formatTestResultsAsText)
