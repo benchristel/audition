@@ -1,15 +1,17 @@
 import {expect, test, equals, which} from "@benchristel/taste"
-import {success, error, Result} from "./result"
+import {success, failure, Result} from "./result"
 // @ts-ignore
 import Parser from "./generated/csv-parser"
 
 const parser = Parser()
 
-export function parseCsv(s: string): Result<Array<Array<string>>> {
+export function parseCsv(
+  s: string,
+): Result<Array<Array<string>>, string> {
   try {
     return success(parser.parse(s))
   } catch (e: any) {
-    return error(e.message)
+    return failure(e.message)
   }
 }
 
@@ -54,14 +56,14 @@ test("parseCsv", {
   "does not allow spaces before quoted data"() {
     expect(
       parseCsv(' ""'),
-      equals(error(which(contains('Expected ","')))),
+      equals(failure(which(contains('Expected ","')))),
     )
   },
 
   "does not allow quotes in unquoted data"() {
     expect(
       parseCsv('say "hello"'),
-      equals(error(which(contains('Expected ","')))),
+      equals(failure(which(contains('Expected ","')))),
     )
   },
 

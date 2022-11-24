@@ -1,7 +1,7 @@
 import {expect, equals, test, which} from "@benchristel/taste"
 // @ts-ignore
 import GlossParser from "./generated/gloss-parser.js"
-import {error, Result, success} from "./lib/result.js"
+import {failure, Result, success} from "./lib/result.js"
 import {matches} from "./lib/strings"
 
 const glossParser = GlossParser()
@@ -20,7 +20,7 @@ export type Compound = {type: "compound"; elements: Array<Gloss>}
   parseGloss as (
     mode: "implicit-pointers" | "implicit-literals",
     raw: string,
-  ) => Result<Gloss>
+  ) => Result<Gloss, string>
   literal as (s: string) => Literal
   pointer as (lexeme: string) => Pointer
   inflection as (
@@ -124,7 +124,7 @@ test("parseGloss", {
     expect(
       parseGloss("implicit-pointers", "[blah"),
       equals,
-      error(which(matches(/Failed to parse "\[blah"/))),
+      failure(which(matches(/Failed to parse "\[blah"/))),
     )
   },
 })
@@ -132,7 +132,7 @@ test("parseGloss", {
 export function parseGloss(
   mode: "implicit-pointers" | "implicit-literals",
   s: string,
-): Result<Gloss> {
+): Result<Gloss, string> {
   const startRule =
     mode === "implicit-pointers"
       ? "GlossWithImplicitPointers"
@@ -140,7 +140,7 @@ export function parseGloss(
   try {
     return success(glossParser.parse(s, {startRule}))
   } catch (e: any) {
-    return error(`Failed to parse "${s}": ` + e.message)
+    return failure(`Failed to parse "${s}": ` + e.message)
   }
 }
 

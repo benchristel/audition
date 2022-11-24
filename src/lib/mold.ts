@@ -1,62 +1,66 @@
 import {expect, equals, test} from "@benchristel/taste"
 import {M} from "./maybe"
-import {error, ErrorResult, Result, success} from "./result"
+import {failure, FailureResult, Result, success} from "./result"
 
-type Mold<T> = (value: unknown) => Result<T>
+type Mold<T> = (value: unknown) => Result<T, string>
 
 test("Mold.string", {
   "casts a string"() {
-    const result: Result<string> = Mold.string("hello")
+    const result: Result<string, string> = Mold.string("hello")
     expect(result, equals, success("hello"))
   },
 
   "fails to cast a number"() {
-    const result: Result<string> = Mold.string(3)
-    expect(result, equals, error("can't cast 3 to string"))
+    const result: Result<string, string> = Mold.string(3)
+    expect(result, equals, failure("can't cast 3 to string"))
   },
 })
 
 test("Mold.array", {
   "casts an array of strings"() {
-    const result: Result<Array<string>> = Mold.array(Mold.string)([
-      "one",
-      "two",
-    ])
+    const result: Result<Array<string>, string> = Mold.array(
+      Mold.string,
+    )(["one", "two"])
     expect(result, equals, success(["one", "two"]))
   },
 
   "fails on an array of mismatched values"() {
-    const result: Result<Array<string>> = Mold.array(Mold.string)([
-      "one",
-      99,
-    ])
+    const result: Result<Array<string>, string> = Mold.array(
+      Mold.string,
+    )(["one", 99])
     expect(
       result,
       equals,
-      error("at index 1: can't cast 99 to string"),
+      failure("at index 1: can't cast 99 to string"),
     )
   },
 
   "fails on a non-array"() {
-    const result: Result<Array<string>> = Mold.array(Mold.string)({})
-    expect(result, equals, error("can't cast object to array"))
+    const result: Result<Array<string>, string> = Mold.array(
+      Mold.string,
+    )({})
+    expect(result, equals, failure("can't cast object to array"))
   },
 
   "works on arrays of arrays"() {
     const arrayOfArraysOfStrings = Mold.array(Mold.array(Mold.string))
-    const result: Result<Array<Array<string>>> =
-      arrayOfArraysOfStrings([["one"], ["two", "three"]])
+    const result: Result<
+      Array<Array<string>>,
+      string
+    > = arrayOfArraysOfStrings([["one"], ["two", "three"]])
     expect(result, equals, success([["one"], ["two", "three"]]))
   },
 
   "fails on an arrays of arrays with mismatched values"() {
     const arrayOfArraysOfStrings = Mold.array(Mold.array(Mold.string))
-    const result: Result<Array<Array<string>>> =
-      arrayOfArraysOfStrings([["one"], [99, "three"]])
+    const result: Result<
+      Array<Array<string>>,
+      string
+    > = arrayOfArraysOfStrings([["one"], [99, "three"]])
     expect(
       result,
       equals,
-      error("at index 1: at index 0: can't cast 99 to string"),
+      failure("at index 1: at index 0: can't cast 99 to string"),
     )
   },
 })
@@ -67,10 +71,11 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Result<{foo: string; bar: string}> = structMold({
-      foo: "a",
-      bar: "b",
-    })
+    const result: Result<{foo: string; bar: string}, string> =
+      structMold({
+        foo: "a",
+        bar: "b",
+      })
     expect(result, equals, success({foo: "a", bar: "b"}))
   },
 
@@ -79,13 +84,14 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Result<{foo: string; bar: string}> = structMold({
-      foo: "a",
-    })
+    const result: Result<{foo: string; bar: string}, string> =
+      structMold({
+        foo: "a",
+      })
     expect(
       result,
       equals,
-      error("at property bar: can't cast undefined to string"),
+      failure("at property bar: can't cast undefined to string"),
     )
   },
 
@@ -94,14 +100,15 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Result<{foo: string; bar: string}> = structMold({
-      foo: "a",
-      bar: 99,
-    })
+    const result: Result<{foo: string; bar: string}, string> =
+      structMold({
+        foo: "a",
+        bar: 99,
+      })
     expect(
       result,
       equals,
-      error("at property bar: can't cast 99 to string"),
+      failure("at property bar: can't cast 99 to string"),
     )
   },
 
@@ -110,11 +117,12 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Result<{foo: string; bar: string}> = structMold({
-      foo: "a",
-      bar: "b",
-      baz: "c",
-    })
+    const result: Result<{foo: string; bar: string}, string> =
+      structMold({
+        foo: "a",
+        bar: "b",
+        baz: "c",
+      })
     expect(result, equals, success({foo: "a", bar: "b", baz: "c"}))
   },
 
@@ -123,9 +131,9 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Result<{foo: string; bar: string}> =
+    const result: Result<{foo: string; bar: string}, string> =
       structMold(null)
-    expect(result, equals, error("can't cast null to struct"))
+    expect(result, equals, failure("can't cast null to struct"))
   },
 
   "fails on an array"() {
@@ -133,8 +141,9 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Result<{foo: string; bar: string}> = structMold([])
-    expect(result, equals, error("can't cast array to struct"))
+    const result: Result<{foo: string; bar: string}, string> =
+      structMold([])
+    expect(result, equals, failure("can't cast array to struct"))
   },
 
   "fails on a non-object"() {
@@ -142,16 +151,16 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Result<{foo: string; bar: string}> =
+    const result: Result<{foo: string; bar: string}, string> =
       structMold("bork")
-    expect(result, equals, error("can't cast bork to struct"))
+    expect(result, equals, failure("can't cast bork to struct"))
   },
 
   "succeeds recursively"() {
     const structMold = Mold.struct({
       foo: Mold.struct({bar: Mold.string}),
     })
-    const result: Result<{foo: {bar: string}}> = structMold({
+    const result: Result<{foo: {bar: string}}, string> = structMold({
       foo: {bar: "a"},
     })
     expect(result, equals, success({foo: {bar: "a"}}))
@@ -161,13 +170,13 @@ test("Mold.struct", {
     const structMold = Mold.struct({
       foo: Mold.struct({bar: Mold.string}),
     })
-    const result: Result<{foo: {bar: string}}> = structMold({
+    const result: Result<{foo: {bar: string}}, string> = structMold({
       foo: {bar: null},
     })
     expect(
       result,
       equals,
-      error(
+      failure(
         "at property foo: at property bar: can't cast null to string",
       ),
     )
@@ -192,7 +201,7 @@ test("Mold.optional", {
 
   "fails on a value that doesn't match the type"() {
     const result = Mold.optional(Mold.string)(99)
-    expect(result, equals, error("can't cast 99 to string"))
+    expect(result, equals, failure("can't cast 99 to string"))
   },
 
   "can be used to make struct properties optional"() {
@@ -215,7 +224,7 @@ export namespace Mold {
       }
       for (let i = 0; i < value.length; i++) {
         const result = contents(value[i])
-        if (result.type === "error") {
+        if (result.type === "failure") {
           return prefixError(result, `at index ${i}:`)
         }
       }
@@ -236,7 +245,7 @@ export namespace Mold {
       for (const [k, mold] of Object.entries(shape)) {
         // @ts-ignore-error
         const result = mold(value[k])
-        if (result.type === "error") {
+        if (result.type === "failure") {
           return prefixError(result, `at property ${k}:`)
         }
       }
@@ -254,8 +263,11 @@ export namespace Mold {
   }
 }
 
-function failedToCast(value: unknown, mold: string): ErrorResult {
-  return error(`can't cast ${describe(value)} to ${mold}`)
+function failedToCast(
+  value: unknown,
+  mold: string,
+): FailureResult<string> {
+  return failure(`can't cast ${describe(value)} to ${mold}`)
 
   function describe(value: unknown): string {
     if (value === null) return "null"
@@ -265,6 +277,9 @@ function failedToCast(value: unknown, mold: string): ErrorResult {
   }
 }
 
-function prefixError(e: ErrorResult, prefix: string): ErrorResult {
-  return error(prefix + " " + e.message)
+function prefixError(
+  e: FailureResult<string>,
+  prefix: string,
+): FailureResult<string> {
+  return failure(prefix + " " + e.detail)
 }

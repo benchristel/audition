@@ -1,16 +1,17 @@
 import {test, expect, equals} from "@benchristel/taste"
+import {exhausted} from "./exhaust"
 
-export type Result<T> = SuccessResult<T> | ErrorResult
+export type Result<T, F> = SuccessResult<T> | FailureResult<F>
 
 export type SuccessResult<T> = {type: "success"; value: T}
-export type ErrorResult = {type: "error"; message: string}
+export type FailureResult<F> = {type: "failure"; detail: F}
 
 export function success<T>(value: T): SuccessResult<T> {
   return {type: "success", value}
 }
 
-export function error(message: string): ErrorResult {
-  return {type: "error", message}
+export function failure<F>(detail: F): FailureResult<F> {
+  return {type: "failure", detail}
 }
 
 test("Result.map returns a function that", {
@@ -20,108 +21,152 @@ test("Result.map returns a function that", {
     expect(rInc(success(3)), equals(success(4)))
   },
 
-  "passes an error through"() {
+  "passes a failure through"() {
     const inc = (n: number) => n + 1
     const rInc = Result.map(inc)
-    expect(rInc(error("oops")), equals(error("oops")))
+    expect(rInc(failure("oops")), equals(failure("oops")))
   },
 })
 
 test("Result.flatMap returns a function that", {
   "transforms a success"() {
     const reciprocal = (x: number) =>
-      x === 0 ? error("can't divide by 0") : success(1 / x)
+      x === 0 ? failure("can't divide by 0") : success(1 / x)
     const rReciprocal = Result.flatMap(reciprocal)
     expect(rReciprocal(success(4)), equals(success(0.25)))
   },
 
   "transforms success into failure"() {
     const reciprocal = (x: number) =>
-      x === 0 ? error("can't divide by 0") : success(1 / x)
+      x === 0 ? failure("can't divide by 0") : success(1 / x)
     const rReciprocal = Result.flatMap(reciprocal)
     expect(
       rReciprocal(success(0)),
-      equals(error("can't divide by 0")),
+      equals(failure("can't divide by 0")),
     )
   },
 
-  "passes an error through"() {
-    const fail = () => error("this should be ignored")
-    expect(Result.flatMap(fail)(error("oops")), equals(error("oops")))
+  "passes a failure through"() {
+    const fail = () => failure("this should be ignored")
+    expect(
+      Result.flatMap(fail)(failure("oops")),
+      equals(failure("oops")),
+    )
   },
 })
 
 test("Result.objAll", {
   "is typesafe"() {
-    const a: Result<{a: number; b: string}> = Result.objAll({
+    const a: Result<{a: number; b: string}, string> = Result.objAll({
       a: success(1),
-      b: error("uh oh"),
+      b: failure("uh oh"),
     })
     // @ts-expect-error
-    const b: Result<{a: string; b: string}> = Result.objAll({
+    const b: Result<{a: string; b: string}, string> = Result.objAll({
       a: success(1),
-      b: error("uh oh"),
+      b: failure("uh oh"),
     })
   },
 })
 
 export namespace Result {
-  export type Value<T extends Result<any>> = Extract<
+  export type Value<T extends Result<any, any>> = Extract<
     T,
     {type: "success"}
   >["value"]
 
+  export type Failure<T extends Result<any, any>> = Extract<
+    T,
+    {type: "failure"}
+  >["detail"]
+
   export const map: <I, O>(
     f: (arg: I) => O,
-  ) => (result: Result<I>) => Result<O> = (f) => {
+  ) => <F>(result: Result<I, F>) => Result<O, F> = (f) => {
     return (r) => {
       switch (r.type) {
         case "success":
           return success(f(r.value))
-        case "error":
+        case "failure":
           return r
+        default:
+          throw exhausted(r)
       }
     }
   }
 
-  export const flatMap: <I, O>(
-    f: (arg: I) => Result<O>,
-  ) => (result: Result<I>) => Result<O> = (f) => {
+  export const flatMap: <I, O, F>(
+    f: (arg: I) => Result<O, F>,
+  ) => <E>(result: Result<I, E>) => Result<O, E | F> = (f) => {
     return (r) => {
       switch (r.type) {
         case "success":
           return f(r.value)
-        case "error":
+        case "failure":
           return r
+        default:
+          throw exhausted(r)
       }
     }
   }
 
-  export function all<T>(
-    results: Array<Result<T>>,
-  ): Result<Array<T>> {
+  export function all<A, B, F>(
+    results: [Result<A, F>, Result<B, F>],
+  ): Result<[A, B], F>
+  export function all<T, F>(
+    results: Array<Result<T, F>>,
+  ): Result<Array<T>, F>
+  export function all<T, F>(
+    results: Array<Result<T, F>>,
+  ): Result<Array<T>, F> {
     const successes = []
     for (const r of results) {
-      if (r.type === "success") {
-        successes.push(r.value)
-      } else {
-        return r
+      switch (r.type) {
+        case "success":
+          successes.push(r.value)
+          break
+        case "failure":
+          return r
+        default:
+          throw exhausted(r)
       }
     }
     return success(successes)
   }
 
-  export function objAll<T extends {[key: string]: Result<any>}>(
-    results: T,
-  ): Result<{[Property in keyof T]: Value<T[Property]>}> {
+  export function objAll<
+    Obj extends {[key: string]: Result<any, F>},
+    F,
+  >(
+    results: Obj,
+  ): Result<{[Prop in keyof Obj]: Value<Obj[Prop]>}, F> {
     const successes: any = {}
     for (const [k, v] of Object.entries(results)) {
-      if (v.type === "success") {
-        successes[k] = v.value
-      } else {
-        return v
+      switch (v.type) {
+        case "success":
+          successes[k] = v.value
+          break
+        case "failure":
+          return v
+        default:
+          throw exhausted(v)
       }
     }
     return success(successes)
+  }
+
+  export const recover = function <T, F>(
+    handle: (e: FailureResult<F>) => T,
+  ): (r: Result<T, F>) => T {
+    return (r) => {
+      switch (r.type) {
+        case "success":
+          return r.value
+        case "failure":
+          return handle(r)
+        default:
+          throw exhausted(r)
+      }
+    }
   }
 }

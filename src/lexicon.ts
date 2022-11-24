@@ -1,5 +1,5 @@
 import {test, expect, equals, not, which} from "@benchristel/taste"
-import {error, success, Result} from "./lib/result"
+import {failure, success, Result} from "./lib/result"
 import {parseCsv} from "./lib/csv"
 import {empty, setDiff} from "./lib/indexables"
 import {matches, trimMargin} from "./lib/strings"
@@ -25,26 +25,30 @@ export type Lexeme = {
 export type LexiconIndex = {
   [id: string]: Gloss
 }
-;() => parseLexicon as (csv: string) => Result<Lexicon>
+;() => parseLexicon as (csv: string) => Result<Lexicon, string>
 
 test("parseLexicon", {
   "fails given an empty string"() {
-    expect(parseLexicon(""), equals, error("missing header row"))
+    expect(parseLexicon(""), equals, failure("missing header row"))
   },
 
   "fails given a blank string"() {
-    expect(parseLexicon("   "), equals, error("missing header row"))
+    expect(parseLexicon("   "), equals, failure("missing header row"))
   },
 
   "fails given empty lines"() {
-    expect(parseLexicon("\n\n"), equals, error("missing header row"))
+    expect(
+      parseLexicon("\n\n"),
+      equals,
+      failure("missing header row"),
+    )
   },
 
   "fails given a header that's missing all required columns"() {
     expect(
       parseLexicon("invalid"),
       equals(
-        error("missing header columns: id, translation, generator"),
+        failure("missing header columns: id, translation, generator"),
       ),
     )
   },
@@ -52,7 +56,7 @@ test("parseLexicon", {
   "fails given a header that's missing one required column"() {
     expect(
       parseLexicon("id,generator"),
-      equals(error("missing header columns: translation")),
+      equals(failure("missing header columns: translation")),
     )
   },
 
@@ -217,57 +221,63 @@ test("parseLexicon", {
     expect(
       lexemes,
       equals,
-      error(
+      failure(
         which(matches(/Failed to parse "spaces aren't allowed"/)),
       ),
     )
   },
 })
 
-export function parseLexicon(raw: string): Result<Lexicon> {
+export function parseLexicon(raw: string): Result<Lexicon, string> {
   return _(
     parseCsv(raw),
-    Result.flatMap((rows: Array<Array<string>>) => {
-      const [headerRow, ...dataRows] = rows.filter(not(emptyRow))
-      if (headerRow == null) {
-        return error("missing header row")
-      }
+    Result.flatMap(
+      (rows: Array<Array<string>>): Result<Lexicon, string> => {
+        const [headerRow, ...dataRows] = rows.filter(not(emptyRow))
+        if (headerRow == null) {
+          return failure("missing header row")
+        }
 
-      const missingHeaders = setDiff(REQUIRED_COLUMNS, headerRow)
-      if (!empty(missingHeaders)) {
-        return error(
-          `missing header columns: ${missingHeaders.join(", ")}`,
-        )
-      }
+        const missingHeaders = setDiff(REQUIRED_COLUMNS, headerRow)
+        if (!empty(missingHeaders)) {
+          return failure(
+            `missing header columns: ${missingHeaders.join(", ")}`,
+          )
+        }
 
-      const idColumnIndex = headerRow.indexOf("id")
-      const translationColumnIndex = headerRow.indexOf("translation")
-      const generatorColumnIndex = headerRow.indexOf("generator")
-      const appColumnIndices = [
-        idColumnIndex,
-        translationColumnIndex,
-        generatorColumnIndex,
-      ]
+        const idColumnIndex = headerRow.indexOf("id")
+        const translationColumnIndex =
+          headerRow.indexOf("translation")
+        const generatorColumnIndex = headerRow.indexOf("generator")
+        const appColumnIndices = [
+          idColumnIndex,
+          translationColumnIndex,
+          generatorColumnIndex,
+        ]
 
-      return Result.objAll({
-        columnOrder: success(headerRow),
-        lexemes: Result.all(
-          dataRows.map(fill("", headerRow.length)).map((cells) =>
-            Result.objAll({
-              id: success(cells[idColumnIndex]),
-              translation: parseGloss(
-                "implicit-literals",
-                cells[translationColumnIndex],
-              ),
-              generator: success(cells[generatorColumnIndex]),
-              userColumns: success(
-                cells.filter((_, i) => !appColumnIndices.includes(i)),
-              ),
-            }),
+        return Result.objAll({
+          columnOrder: success(headerRow),
+          lexemes: Result.all(
+            dataRows.map(fill("", headerRow.length)).map(
+              (cells) =>
+                Result.objAll({
+                  id: success(cells[idColumnIndex]),
+                  translation: parseGloss(
+                    "implicit-literals",
+                    cells[translationColumnIndex],
+                  ),
+                  generator: success(cells[generatorColumnIndex]),
+                  userColumns: success(
+                    cells.filter(
+                      (_, i) => !appColumnIndices.includes(i),
+                    ),
+                  ),
+                }) as Result<Lexeme, string>,
+            ),
           ),
-        ),
-      })
-    }),
+        })
+      },
+    ),
   )
 }
 
