@@ -25,7 +25,9 @@ export type Lexeme = {
 export type LexiconIndex = {
   [id: string]: Gloss
 }
-;() => parseLexicon as (csv: string) => Result<Lexicon, string>
+
+export type ParseLexiconResult = Result<Lexicon, string>
+;() => parseLexicon as (csv: string) => ParseLexiconResult
 
 test("parseLexicon", {
   "fails given an empty string"() {
@@ -228,11 +230,11 @@ test("parseLexicon", {
   },
 })
 
-export function parseLexicon(raw: string): Result<Lexicon, string> {
+export function parseLexicon(raw: string): ParseLexiconResult {
   return _(
     parseCsv(raw),
     Result.flatMap(
-      (rows: Array<Array<string>>): Result<Lexicon, string> => {
+      (rows: Array<Array<string>>): ParseLexiconResult => {
         const [headerRow, ...dataRows] = rows.filter(not(emptyRow))
         if (headerRow == null) {
           return failure("missing header row")
@@ -254,6 +256,14 @@ export function parseLexicon(raw: string): Result<Lexicon, string> {
           translationColumnIndex,
           generatorColumnIndex,
         ]
+        type Cells = Array<string>
+        const id = (cells: Cells) => cells[idColumnIndex]
+        const translation = (cells: Cells) =>
+          cells[translationColumnIndex]
+        const generator = (cells: Cells) =>
+          cells[generatorColumnIndex]
+        const userColumns = (cells: Cells) =>
+          cells.filter((_, i) => !appColumnIndices.includes(i))
 
         return Result.objAll({
           columnOrder: success(headerRow),
@@ -261,17 +271,10 @@ export function parseLexicon(raw: string): Result<Lexicon, string> {
             dataRows.map(fill("", headerRow.length)).map(
               (cells) =>
                 Result.objAll({
-                  id: success(cells[idColumnIndex]),
-                  translation: parseGloss(
-                    "implicit-literals",
-                    cells[translationColumnIndex],
-                  ),
-                  generator: success(cells[generatorColumnIndex]),
-                  userColumns: success(
-                    cells.filter(
-                      (_, i) => !appColumnIndices.includes(i),
-                    ),
-                  ),
+                  id: success(id(cells)),
+                  translation: parseLexicalGloss(translation(cells)),
+                  generator: success(generator(cells)),
+                  userColumns: success(userColumns(cells)),
                 }) as Result<Lexeme, string>,
             ),
           ),
@@ -305,4 +308,8 @@ test("emptyRow", {
 
 function emptyRow(row: Array<string>): boolean {
   return equals([which(matches(/^\s*$/))], row)
+}
+
+function parseLexicalGloss(raw: string): Result<Gloss, string> {
+  return parseGloss("implicit-literals", raw)
 }
