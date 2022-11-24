@@ -26,7 +26,7 @@ test("Mold.string", {
   },
 
   "fails to cast a number"() {
-    const result: Cast<string> = Mold.string(3, ["a-path-component"])
+    const result = Mold.string(3, ["a-path-component"])
     expect(
       result,
       equals,
@@ -53,7 +53,7 @@ test("Mold.array", {
 
   "fails on an array of mismatched values"() {
     const stringArray = Mold.array(Mold.string)
-    const result: Cast<Array<string>> = stringArray(["one", 99], [])
+    const result = stringArray(["one", 99], [])
     expect(
       result,
       equals,
@@ -69,10 +69,7 @@ test("Mold.array", {
 
   "reports multiple mismatched values"() {
     const stringArray = Mold.array(Mold.string)
-    const result: Cast<Array<string>> = stringArray(
-      ["one", 99, "two", 299],
-      [],
-    )
+    const result = stringArray(["one", 99, "two", 299], [])
     expect(
       result,
       equals,
@@ -93,7 +90,7 @@ test("Mold.array", {
 
   "fails on a non-array"() {
     const stringArray = Mold.array(Mold.string)
-    const result: Cast<Array<string>> = stringArray({}, [])
+    const result = stringArray({}, [])
     expect(
       result,
       equals,
@@ -105,7 +102,7 @@ test("Mold.array", {
 
   "works on arrays of arrays"() {
     const arrayOfArraysOfStrings = Mold.array(Mold.array(Mold.string))
-    const result: Cast<Array<Array<string>>> = arrayOfArraysOfStrings(
+    const result = arrayOfArraysOfStrings(
       [["one"], ["two", "three"]],
       [],
     )
@@ -114,7 +111,7 @@ test("Mold.array", {
 
   "fails on an arrays of arrays with mismatched values"() {
     const arrayOfArraysOfStrings = Mold.array(Mold.array(Mold.string))
-    const result: Cast<Array<Array<string>>> = arrayOfArraysOfStrings(
+    const result = arrayOfArraysOfStrings(
       [["one"], [99, "three", 199], 299],
       [],
     )
@@ -148,13 +145,7 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Cast<{foo: string; bar: string}> = structMold(
-      {
-        foo: "a",
-        bar: "b",
-      },
-      [],
-    )
+    const result = structMold({foo: "a", bar: "b"}, [])
     expect(result, equals, success({foo: "a", bar: "b"}))
   },
 
@@ -163,12 +154,7 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Cast<{foo: string; bar: string}> = structMold(
-      {
-        foo: "a",
-      },
-      [],
-    )
+    const result = structMold({foo: "a"}, [])
     expect(
       result,
       equals,
@@ -187,13 +173,7 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Cast<{foo: string; bar: string}> = structMold(
-      {
-        foo: "a",
-        bar: 99,
-      },
-      [],
-    )
+    const result = structMold({foo: "a", bar: 99}, [])
     expect(
       result,
       equals,
@@ -212,14 +192,7 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Cast<{foo: string; bar: string}> = structMold(
-      {
-        foo: "a",
-        bar: "b",
-        baz: "c",
-      },
-      [],
-    )
+    const result = structMold({foo: "a", bar: "b", baz: "c"}, [])
     expect(result, equals, success({foo: "a", bar: "b", baz: "c"}))
   },
 
@@ -228,10 +201,7 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Cast<{foo: string; bar: string}> = structMold(
-      null,
-      [],
-    )
+    const result = structMold(null, [])
     expect(
       result,
       equals,
@@ -250,10 +220,7 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Cast<{foo: string; bar: string}> = structMold(
-      [],
-      [],
-    )
+    const result = structMold([], [])
     expect(
       result,
       equals,
@@ -272,10 +239,7 @@ test("Mold.struct", {
       foo: Mold.string,
       bar: Mold.string,
     })
-    const result: Cast<{foo: string; bar: string}> = structMold(
-      "bork",
-      [],
-    )
+    const result = structMold("bork", [])
     expect(
       result,
       equals,
@@ -293,12 +257,7 @@ test("Mold.struct", {
     const structMold = Mold.struct({
       foo: Mold.struct({bar: Mold.string}),
     })
-    const result: Cast<{foo: {bar: string}}> = structMold(
-      {
-        foo: {bar: "a"},
-      },
-      [],
-    )
+    const result = structMold({foo: {bar: "a"}}, [])
     expect(result, equals, success({foo: {bar: "a"}}))
   },
 
@@ -306,12 +265,7 @@ test("Mold.struct", {
     const structMold = Mold.struct({
       foo: Mold.struct({bar: Mold.string}),
     })
-    const result: Cast<{foo: {bar: string}}> = structMold(
-      {
-        foo: {bar: null},
-      },
-      [],
-    )
+    const result = structMold({foo: {bar: null}}, [])
     expect(
       result,
       equals,
