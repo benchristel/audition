@@ -1,6 +1,5 @@
 import {expect, equals, test} from "@benchristel/taste"
-import {validateHeaderValue} from "http"
-import {type} from "os"
+import {prop} from "./objects"
 import {empty} from "./indexables"
 import {M} from "./maybe"
 import {failure, FailureResult, Result, success} from "./result"
@@ -14,10 +13,15 @@ type Mismatch = {
     | {type: "array"}
     | {type: "object"}
     | {type: "atom"; value: unknown}
-  expected: "string" | "array" | "struct"
+  expected: MoldType
   path: Path
 }
 type Path = Array<string | number>
+type MoldType =
+  | {type: "string"}
+  | {type: "array"}
+  | {type: "struct"}
+  | {type: "either"; options: Array<MoldType>}
 
 test("Mold.string", {
   "casts a string"() {
@@ -33,7 +37,7 @@ test("Mold.string", {
       failure([
         {
           actual: {type: "atom", value: 3},
-          expected: "string",
+          expected: {type: "string"},
           path: ["a-path-component"],
         },
       ]),
@@ -60,7 +64,7 @@ test("Mold.array", {
       failure([
         {
           actual: {type: "atom", value: 99},
-          expected: "string",
+          expected: {type: "string"},
           path: [1],
         },
       ] as CastFailure),
@@ -76,12 +80,12 @@ test("Mold.array", {
       failure([
         {
           actual: {type: "atom", value: 99},
-          expected: "string",
+          expected: {type: "string"},
           path: [1],
         },
         {
           actual: {type: "atom", value: 299},
-          expected: "string",
+          expected: {type: "string"},
           path: [3],
         },
       ] as CastFailure),
@@ -95,7 +99,11 @@ test("Mold.array", {
       result,
       equals,
       failure([
-        {actual: {type: "object"}, expected: "array", path: []},
+        {
+          actual: {type: "object"},
+          expected: {type: "array"},
+          path: [],
+        },
       ]),
     )
   },
@@ -120,17 +128,17 @@ test("Mold.array", {
       equals,
       failure([
         {
-          expected: "string",
+          expected: {type: "string"},
           actual: {type: "atom", value: 99},
           path: [1, 0],
         },
         {
-          expected: "string",
+          expected: {type: "string"},
           actual: {type: "atom", value: 199},
           path: [1, 2],
         },
         {
-          expected: "array",
+          expected: {type: "array"},
           actual: {type: "atom", value: 299},
           path: [2],
         },
@@ -161,7 +169,7 @@ test("Mold.struct", {
       failure([
         {
           actual: {type: "atom", value: undefined},
-          expected: "string",
+          expected: {type: "string"},
           path: ["bar"],
         },
       ]),
@@ -180,7 +188,7 @@ test("Mold.struct", {
       failure([
         {
           actual: {type: "atom", value: 99},
-          expected: "string",
+          expected: {type: "string"},
           path: ["bar"],
         },
       ]),
@@ -208,7 +216,7 @@ test("Mold.struct", {
       failure([
         {
           actual: {type: "atom", value: null},
-          expected: "struct",
+          expected: {type: "struct"},
           path: [],
         },
       ]),
@@ -227,7 +235,7 @@ test("Mold.struct", {
       failure([
         {
           actual: {type: "array"},
-          expected: "struct",
+          expected: {type: "struct"},
           path: [],
         },
       ]),
@@ -246,7 +254,7 @@ test("Mold.struct", {
       failure([
         {
           actual: {type: "string", value: "bork"},
-          expected: "struct",
+          expected: {type: "struct"},
           path: [],
         },
       ]),
@@ -272,7 +280,7 @@ test("Mold.struct", {
       failure([
         {
           actual: {type: "atom", value: null},
-          expected: "string",
+          expected: {type: "string"},
           path: ["foo", "bar"],
         },
       ]),
@@ -303,7 +311,7 @@ test("Mold.optional", {
       equals,
       failure([
         {
-          expected: "string",
+          expected: {type: "string"},
           actual: {type: "atom", value: 99},
           path: [],
         },
@@ -325,9 +333,73 @@ test("Mold.optional", {
       equals,
       failure([
         {
-          expected: "string",
+          expected: {type: "string"},
           actual: {type: "atom", value: 99},
           path: ["foo"],
+        },
+      ]),
+    )
+  },
+})
+
+test("Mold.either", {
+  "forbids any value when no options are given"() {
+    const neverMold = Mold.either()
+    const result = neverMold("something", [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "string", value: "something"},
+          expected: {type: "either", options: []},
+          path: [],
+        },
+      ]),
+    )
+  },
+
+  "allows a value that matches the only option"() {
+    const stringMold = Mold.either(Mold.string)
+    const result = stringMold("something", [])
+    expect(result, equals, success("something"))
+  },
+
+  "allows a value that matches the first option"() {
+    const arrayOrStringMold = Mold.either(
+      Mold.array(Mold.string),
+      Mold.string,
+    )
+    const result = arrayOrStringMold(["one", "two"], [])
+    expect(result, equals, success(["one", "two"]))
+  },
+
+  "allows a value that matches the second option"() {
+    const arrayOrStringMold = Mold.either(
+      Mold.array(Mold.string),
+      Mold.string,
+    )
+    const result = arrayOrStringMold("something", [])
+    expect(result, equals, success("something"))
+  },
+
+  "forbids a value that matches none of the options"() {
+    const arrayOrStringMold = Mold.either(
+      Mold.array(Mold.string),
+      Mold.string,
+    )
+    const result = arrayOrStringMold(99, [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "atom", value: 99},
+          expected: {
+            type: "either",
+            options: [{type: "array"}, {type: "string"}],
+          },
+          path: [],
         },
       ]),
     )
@@ -338,12 +410,14 @@ export namespace Mold {
   export const string: Mold<string> = (value: unknown, path: Path) =>
     typeof value === "string"
       ? success(value)
-      : failure([{expected: "string", actual: diagnose(value), path}])
+      : failure([
+          {expected: {type: "string"}, actual: diagnose(value), path},
+        ])
 
   export function array<T>(elementMold: Mold<T>): Mold<Array<T>> {
     return (value, path) => {
       if (!Array.isArray(value)) {
-        return failedToCast(value, "array", path)
+        return failedToCast(value, {type: "array"}, path)
       }
       const mismatches = value
         .map((elem, i) => elementMold(elem, [...path, i]))
@@ -357,7 +431,7 @@ export namespace Mold {
   }): Mold<T> {
     return (value, path): Cast<T> => {
       if (!isObjectObject(value)) {
-        return failedToCast(value, "struct", path)
+        return failedToCast(value, {type: "struct"}, path)
       }
       const mismatches = Object.entries(shape)
         // @ts-ignore-error
@@ -376,6 +450,38 @@ export namespace Mold {
       return shape(value, path)
     }
   }
+
+  export function either(): Mold<never>
+  export function either<A>(a: Mold<A>): Mold<A>
+  export function either<A, B>(a: Mold<A>, b: Mold<B>): Mold<A | B>
+  export function either<A, B, C>(
+    a: Mold<A>,
+    b: Mold<B>,
+    c: Mold<C>,
+  ): Mold<A | B | C>
+  export function either<T>(...options: Array<Mold<T>>): Mold<T> {
+    return (value, path) => {
+      const optionsConsidered: Array<MoldType> = []
+      for (const option of options) {
+        const attempt = option(value, path)
+        switch (attempt.type) {
+          case "success":
+            return attempt
+          case "failure":
+            optionsConsidered.push(
+              ...attempt.detail.map(prop("expected")),
+            )
+        }
+      }
+      return failure([
+        {
+          actual: diagnose(value),
+          expected: {type: "either", options: optionsConsidered},
+          path: path,
+        } as Mismatch,
+      ])
+    }
+  }
 }
 
 function failedToCast(
@@ -384,13 +490,6 @@ function failedToCast(
   path: Path,
 ): FailureResult<CastFailure> {
   return failure([{expected, actual: diagnose(value), path}])
-}
-
-function prefixError(
-  e: FailureResult<string>,
-  prefix: string,
-): FailureResult<string> {
-  return failure(prefix + " " + e.detail)
 }
 
 function diagnose(value: unknown): Mismatch["actual"] {
