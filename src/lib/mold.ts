@@ -22,6 +22,7 @@ type MoldType =
   | {type: "array"}
   | {type: "struct"}
   | {type: "either"; options: Array<MoldType>}
+  | {type: "tuple"; elements: number}
 
 test("Mold.string", {
   "casts a string"() {
@@ -406,6 +407,127 @@ test("Mold.either", {
   },
 })
 
+test("Mold.tuple", {
+  "accepts an empty array when the tuple type has no elements"() {
+    const emptyTupleMold = Mold.tuple()
+    const result = emptyTupleMold([], [])
+    expect(result, equals, success([]))
+  },
+
+  "accepts values matching the tuple elements"() {
+    const stringPairMold = Mold.tuple(Mold.string, Mold.string)
+    const result = stringPairMold(["one", "two"], [])
+    expect(result, equals, success(["one", "two"]))
+  },
+
+  "rejects a non-array"() {
+    const tupleMold = Mold.tuple()
+    const result = tupleMold({}, [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "object"},
+          expected: {type: "tuple", elements: 0},
+          path: [],
+        },
+      ]),
+    )
+  },
+
+  "rejects a tuple with too few elements"() {
+    const stringPairMold = Mold.tuple(Mold.string, Mold.string)
+    const result = stringPairMold(["one"], [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "array"},
+          expected: {type: "tuple", elements: 2},
+          path: [],
+        } as Mismatch,
+      ]),
+    )
+  },
+
+  "rejects a tuple with too many elements"() {
+    const stringPairMold = Mold.tuple(Mold.string, Mold.string)
+    const result = stringPairMold(["one", "two", "too many"], [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "array"},
+          expected: {type: "tuple", elements: 2},
+          path: [],
+        } as Mismatch,
+      ]),
+    )
+  },
+
+  "rejects a tuple with the wrong elements"() {
+    const stringPairMold = Mold.tuple(Mold.string, Mold.string)
+    const result = stringPairMold(["one", 99], [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "atom", value: 99},
+          expected: {type: "string"},
+          path: [1],
+        } as Mismatch,
+      ]),
+    )
+  },
+
+  "lists all mismatches"() {
+    const stringPairMold = Mold.tuple(Mold.string, Mold.string)
+    const result = stringPairMold([99, 199], [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "atom", value: 99},
+          expected: {type: "string"},
+          path: [0],
+        } as Mismatch,
+        {
+          actual: {type: "atom", value: 199},
+          expected: {type: "string"},
+          path: [1],
+        } as Mismatch,
+      ]),
+    )
+  },
+
+  "succeeds recursively"() {
+    const mold = Mold.tuple(Mold.string, Mold.tuple(Mold.string))
+    const result = mold(["one", ["two"]], [])
+    expect(result, equals, success(["one", ["two"]]))
+  },
+
+  "fails recursively"() {
+    const mold = Mold.tuple(Mold.string, Mold.tuple(Mold.string))
+    const result = mold(["one", [99]], [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "atom", value: 99},
+          expected: {type: "string"},
+          path: [1, 0],
+        } as Mismatch,
+      ]),
+    )
+  },
+})
+
 export namespace Mold {
   export const string: Mold<string> = (value: unknown, path: Path) =>
     typeof value === "string"
@@ -480,6 +602,36 @@ export namespace Mold {
           path: path,
         } as Mismatch,
       ])
+    }
+  }
+
+  export function tuple(): Mold<[]>
+  export function tuple<A>(...elementMolds: [Mold<A>]): Mold<[A]>
+  export function tuple<A, B>(
+    ...elementMolds: [Mold<A>, Mold<B>]
+  ): Mold<[A, B]>
+  export function tuple<A, B, C>(
+    ...elementMolds: [Mold<A>, Mold<B>, Mold<C>]
+  ): Mold<[A, B, C]>
+  export function tuple<A, B, C, D>(
+    ...elementMolds: [Mold<A>, Mold<B>, Mold<C>, Mold<D>]
+  ): Mold<[A, B, C, D]>
+  export function tuple(...elementMolds: Array<any>) {
+    return (value: unknown, path: Path) => {
+      if (
+        !Array.isArray(value) ||
+        value.length !== elementMolds.length
+      ) {
+        return failedToCast(
+          value,
+          {type: "tuple", elements: elementMolds.length},
+          path,
+        )
+      }
+      const mismatches = elementMolds
+        .map((mold, i) => mold(value[i], [...path, i]))
+        .flatMap(getMismatches)
+      return empty(mismatches) ? success(value) : failure(mismatches)
     }
   }
 }
