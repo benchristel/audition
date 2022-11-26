@@ -60,7 +60,9 @@ test("a Translator", {
         bear: literal("arth"),
       },
       {
-        PL: replace(/$/, "ec"),
+        inflections: {
+          PL: replace(/$/, "ec"),
+        },
       },
     )
     expect(
@@ -87,8 +89,10 @@ test("a Translator", {
         bear: literal("arth"),
       },
       {
-        PL: replace(/$/, "s"),
-        DIM: replace(/$/, "ling"),
+        inflections: {
+          PL: replace(/$/, "s"),
+          DIM: replace(/$/, "ling"),
+        },
       },
     )
     expect(
@@ -99,9 +103,9 @@ test("a Translator", {
   },
 })
 
-function Translator(
+export function Translator(
   lexiconIndex: LexiconIndex,
-  morphology: Morphology = {},
+  morphology: Morphology = {inflections: {}},
 ): TranslateFn {
   return function translate(gloss: Gloss): string {
     switch (gloss.type) {
@@ -117,7 +121,7 @@ function Translator(
       case "inflection":
         return gloss.inflections.reduce(
           (stem, inflection) =>
-            _(morphology, get(inflection))?.(stem)?.[0] ??
+            _(morphology.inflections, get(inflection))?.(stem)?.[0] ??
             untranslatable(`${stem}#${inflection}`),
           translate(gloss.stem),
         )

@@ -1,4 +1,3 @@
-import {test, expect, is} from "@benchristel/taste"
 import {
   getAllTests,
   runTests,
@@ -7,6 +6,7 @@ import {
 import "./lexicon"
 import "./translator"
 import "./lib/mold"
+import "./lib/mold-view"
 
 runTests(getAllTests())
   .then(formatTestResultsAsText)

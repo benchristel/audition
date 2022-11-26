@@ -169,4 +169,17 @@ export namespace Result {
       }
     }
   }
+
+  export function mapFailure<T, FIn, FOut>(
+    fn: (detail: FIn) => FOut,
+  ): (r: Result<T, FIn>) => Result<T, FOut> {
+    return (r) => {
+      switch (r.type) {
+        case "success":
+          return r
+        case "failure":
+          return failure(fn(r.detail))
+      }
+    }
+  }
 }

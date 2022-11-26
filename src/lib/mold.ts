@@ -4,10 +4,10 @@ import {empty} from "./indexables"
 import {M} from "./maybe"
 import {failure, FailureResult, Result, success} from "./result"
 
-type Mold<T> = (value: unknown, path: Path) => Cast<T>
-type Cast<T> = Result<T, CastFailure>
-type CastFailure = Array<Mismatch>
-type Mismatch = {
+export type Mold<T> = (value: unknown, path: Path) => Cast<T>
+export type Cast<T> = Result<T, CastFailure>
+export type CastFailure = Array<Mismatch>
+export type Mismatch = {
   actual:
     | {type: "string"; value: string}
     | {type: "array"}
@@ -16,8 +16,8 @@ type Mismatch = {
   expected: MoldType
   path: Path
 }
-type Path = Array<string | number>
-type MoldType =
+export type Path = Array<string | number>
+export type MoldType =
   | {type: "string"}
   | {type: "array"}
   | {type: "struct"}
