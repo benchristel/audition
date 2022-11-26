@@ -1,0 +1,13 @@
+# Grammar of __LANGNAME__
+
+## Definite article
+
+The definite article in __LANGNAME__ is __DEF__. It precedes the noun it modifies.
+
+> __DEF bear__ "the bear"
+
+## Adjectives
+
+Adjectives follow their head noun.
+
+> __DEF bear blue__ "the blue bear"

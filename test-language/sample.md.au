@@ -1,0 +1,17 @@
+> In a hole in the ground there lived a hobbit.
+
+__in#CAP hole in#M1#DEFOBJ ground past_p dwell hobbit.__
+
+> Not a nasty, dirty, wet hole, full of the ends of worms and an oozy smell,
+
+__nothing#CAP of#M1 hole nasty#M1, slimy, wet, and_p fill#PASS use#M1#DEFOBJ
+end_n#PL of#M1 worm#PL and_n smell ooze#ADJ#M1,__
+
+> nor yet a dry, bare, sandy hole, with nothing in it to sit down on or to eat.
+
+__and_n nothing of#M1 hole dry#M1, empty_v#PASS, sand#ADJ, and_p have nothing in#M1 3SG for_purpose
+sit#INCH#GER and_n nothing for_purpose#M1 eat#GER.__
+
+> It was a hobbit-hole, and that means comfort.
+
+__past_p#CAP be hole of#M1 hobbit 3SG, and_p that imply comfort_v#GER.__
