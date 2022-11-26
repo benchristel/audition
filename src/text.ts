@@ -116,7 +116,7 @@ function parseGlosses(
   rawSegment: string,
 ): Array<Result<Segment, string>> {
   return rawSegment
-    .split(/([^\^a-zA-Z0-9\+#\[\]_]+)/)
+    .split(/([~`!@\$%&\(\)\=\{\}\\\|;:'",<\.>/\? \t\n\r]+)/)
     .map(
       (s, i) =>
         (i % 2 === 0 && s.length

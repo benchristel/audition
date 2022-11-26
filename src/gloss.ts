@@ -127,6 +127,14 @@ test("parseGloss", {
       failure(which(matches(/Failed to parse "\[blah"/))),
     )
   },
+
+  "accepts accented characters"() {
+    expect(
+      parseGloss("implicit-literals", "áèöŷś"),
+      equals,
+      success(literal("áèöŷś")),
+    )
+  },
 })
 
 export function parseGloss(
