@@ -5,6 +5,7 @@ import {
 } from "@benchristel/taste"
 import "./lexicon"
 import "./translator"
+import "./args"
 
 runTests(getAllTests())
   .then(formatTestResultsAsText)

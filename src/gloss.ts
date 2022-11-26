@@ -1,7 +1,7 @@
 import {expect, equals, test, which} from "@benchristel/taste"
 // @ts-ignore
-import GlossParser from "./generated/gloss-parser.js"
-import {failure, Result, success} from "./lib/result.js"
+import GlossParser from "./generated/gloss-parser"
+import {failure, Result, success} from "./lib/result"
 import {matches} from "./lib/strings"
 
 const glossParser = GlossParser()

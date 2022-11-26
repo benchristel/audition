@@ -6,7 +6,6 @@
   "author": "Ben Christel <ben.christel@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@benchristel/taste": "^0.4.0",
     "@types/node": "^18.11.9",
     "husky": "^8.0.2",
     "pegjs": "^0.10.0",
@@ -19,6 +18,7 @@
     "format": "node_modules/.bin/prettier -w src"
   },
   "dependencies": {
+    "@benchristel/taste": "^0.4.0",
     "yaml": "^2.1.3"
   }
 }
