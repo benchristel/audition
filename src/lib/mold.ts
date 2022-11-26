@@ -23,6 +23,7 @@ type MoldType =
   | {type: "struct"}
   | {type: "either"; options: Array<MoldType>}
   | {type: "tuple"; elements: number}
+  | {type: "map"}
 
 test("Mold.string", {
   "casts a string"() {
@@ -528,6 +529,68 @@ test("Mold.tuple", {
   },
 })
 
+test("Mold.map", {
+  "accepts an empty object"() {
+    const mapMold = Mold.map(Mold.string)
+    const result = mapMold({}, [])
+    expect(result, equals, success({}))
+  },
+
+  "rejects a non-object"() {
+    const mapMold = Mold.map(Mold.string)
+    const result = mapMold([], [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "array"},
+          expected: {type: "map"},
+          path: [],
+        } as Mismatch,
+      ]),
+    )
+  },
+
+  "accepts an object with the right value type"() {
+    const mapMold = Mold.map(Mold.string)
+    const result = mapMold({foo: "one"}, [])
+    expect(result, equals, success({foo: "one"}))
+  },
+
+  "rejects an object with the wrong value type"() {
+    const mapMold = Mold.map(Mold.string)
+    const result = mapMold({foo: 99}, [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "atom", value: 99},
+          expected: {type: "string"},
+          path: ["foo"],
+        } as Mismatch,
+      ]),
+    )
+  },
+
+  "fails recursively"() {
+    const mapMold = Mold.map(Mold.map(Mold.string))
+    const result = mapMold({foo: {bar: 99}}, [])
+    expect(
+      result,
+      equals,
+      failure([
+        {
+          actual: {type: "atom", value: 99},
+          expected: {type: "string"},
+          path: ["foo", "bar"],
+        } as Mismatch,
+      ]),
+    )
+  },
+})
+
 export namespace Mold {
   export const string: Mold<string> = (value: unknown, path: Path) =>
     typeof value === "string"
@@ -632,6 +695,22 @@ export namespace Mold {
         .map((mold, i) => mold(value[i], [...path, i]))
         .flatMap(getMismatches)
       return empty(mismatches) ? success(value) : failure(mismatches)
+    }
+  }
+
+  export function map<T>(
+    valueMold: Mold<T>,
+  ): Mold<{[key: string]: T}> {
+    return (value, path) => {
+      if (!isObjectObject(value)) {
+        return failedToCast(value, {type: "map"}, path)
+      }
+      const mismatches = Object.entries(value as {})
+        .map(([k, v]) => valueMold(v, [...path, k]))
+        .flatMap(getMismatches)
+      return empty(mismatches)
+        ? success(value as {})
+        : failure(mismatches)
     }
   }
 }
