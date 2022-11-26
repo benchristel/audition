@@ -5,7 +5,11 @@ import {Maybe} from "./lib/maybe"
 import {compound, Gloss, inflection, literal, pointer} from "./gloss"
 import {get} from "./lib/objects"
 import {exhausted} from "./lib/exhaust"
-import {Morphology, replace} from "./morphology"
+import {
+  Morphology,
+  replace,
+  compound as makeCompound,
+} from "./morphology"
 
 export type TranslateFn = (gloss: Gloss) => string
 ;() => Translator as (lexiconIndex: LexiconIndex) => TranslateFn
@@ -63,6 +67,7 @@ test("a Translator", {
         inflections: {
           PL: replace(/$/, "ec"),
         },
+        compound: makeCompound([]),
       },
     )
     expect(
@@ -93,6 +98,7 @@ test("a Translator", {
           PL: replace(/$/, "s"),
           DIM: replace(/$/, "ling"),
         },
+        compound: makeCompound([]),
       },
     )
     expect(
@@ -101,11 +107,31 @@ test("a Translator", {
       "arthlings",
     )
   },
+
+  "applies compounding rules"() {
+    const translate = Translator(
+      {
+        bear: compound([
+          literal("bru"),
+          literal("weth"),
+          literal("ar"),
+        ]),
+      },
+      {
+        inflections: {},
+        compound: makeCompound([[/(u)$/, /^(w)/, "$1", "ff"]]),
+      },
+    )
+    expect(translate(pointer("bear")), is, "bruffethar")
+  },
 })
 
 export function Translator(
   lexiconIndex: LexiconIndex,
-  morphology: Morphology = {inflections: {}},
+  morphology: Morphology = {
+    inflections: {},
+    compound: (a, b) => a + b,
+  },
 ): TranslateFn {
   return function translate(gloss: Gloss): string {
     switch (gloss.type) {
@@ -126,7 +152,10 @@ export function Translator(
           translate(gloss.stem),
         )
       case "compound":
-        return gloss.elements.map(translate).join("")
+        if (gloss.elements.length === 0) return ""
+        return gloss.elements
+          .map(translate)
+          .reduce(morphology.compound)
       default:
         throw exhausted(gloss)
     }
