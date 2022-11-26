@@ -6,6 +6,7 @@ import {
 import "./lexicon"
 import "./translator"
 import "./args"
+import "./text"
 
 runTests(getAllTests())
   .then(formatTestResultsAsText)

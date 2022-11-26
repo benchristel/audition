@@ -89,6 +89,12 @@ export const firstThatApplies = curry(
   "firstThatApplies",
 )
 
+export function capitalize(
+  s: string,
+): [string, "applied" | "does-not-match"] {
+  return [s[0].toUpperCase() + s.slice(1), "applied"]
+}
+
 test("parseMorphology", {
   "fails given malformed YAML"() {
     const result = parseMorphology("}")
@@ -97,7 +103,7 @@ test("parseMorphology", {
 
   "succeeds given YAML config with an empty inflections map"() {
     const result = parseMorphology("inflections: {}")
-    expect(result, equals, success({inflections: {}}))
+    expect(result, equals, success({inflections: {CAP: capitalize}}))
   },
 
   "fails given YAML config where inflections is the wrong type"() {
@@ -121,7 +127,10 @@ test("parseMorphology", {
       result,
       equals,
       success({
-        inflections: {PL: firstThatApplies([replace(/[aeo]$/, "i")])},
+        inflections: {
+          CAP: capitalize,
+          PL: firstThatApplies([replace(/[aeo]$/, "i")]),
+        },
       }),
     )
   },
@@ -138,9 +147,12 @@ export function parseMorphology(
 
   function enliven(husk: MorphologyYaml): Morphology {
     return {
-      inflections: mapObject((rules: Array<[string, string]>) =>
-        firstThatApplies(rules.map(enlivenRule)),
-      )(husk.inflections),
+      inflections: {
+        CAP: capitalize,
+        ...mapObject((rules: Array<[string, string]>) =>
+          firstThatApplies(rules.map(enlivenRule)),
+        )(husk.inflections),
+      },
     }
   }
 

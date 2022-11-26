@@ -7,7 +7,7 @@ import {get} from "./lib/objects"
 import {exhausted} from "./lib/exhaust"
 import {Morphology, replace} from "./morphology"
 
-type TranslateFn = (gloss: Gloss) => string
+export type TranslateFn = (gloss: Gloss) => string
 ;() => Translator as (lexiconIndex: LexiconIndex) => TranslateFn
 
 test("a Translator", {
