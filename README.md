@@ -24,6 +24,10 @@ I often get halfway done with an ambitious grammar and then decide I don't like 
 
 Audition makes conlang development more agile, by letting you get fast feedback on tweaks to the lexicon and morphology. You can freely try out different words and inflections and get immediate feedback on how they affect the feel of the language.
 
+## Limitations
+
+Audition is not an extraordinarily flexible tool. It was designed around the syntactic and lexical paradigm described in https://github.com/benchristel/one-grammar. If your language fits within that paradigm, Audition will probably work well for you. If not, your mileage may vary.
+
 ## Get started
 
 1. [Install `bun`](https://bun.sh/) and [`yarn`](https://yarnpkg.com/getting-started/install).
