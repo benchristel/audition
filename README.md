@@ -3,7 +3,7 @@
 Audition is a build tool for conlang grammars and sample texts. You write the conlang snippets in your grammar/textbook in a weird "intermediate representation" language that looks like this:
 
 ```markdown
-> **1SG#CAP ^Arwen. come#1SG 2ACC help#INF.**
+> __1SG#CAP ^Arwen. come#1SG 2ACC help#INF.__
 > "I am Arwen. I've come to help you."
 >
 > —the _Fellowship of the Ring_ movie
@@ -12,7 +12,7 @@ Audition is a build tool for conlang grammars and sample texts. You write the co
 Audition uses `lexicon.csv` and `morphology.yaml` files you provide to compile that input into something like this:
 
 ```markdown
-> **Im Arwen. Telin le thaed.**
+> __Im Arwen. Telin le thaed.__
 > "I am Arwen. I've come to help you."
 >
 > —the _Fellowship of the Ring_ movie
