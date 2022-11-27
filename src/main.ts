@@ -1,4 +1,4 @@
-import {readdirSync, readFileSync} from "fs"
+import {readdirSync, readFileSync, writeFileSync} from "fs"
 import {AuArgs, parseAuArgs} from "./args"
 import {Gloss, parseGloss} from "./gloss"
 import {Lexicon, LexiconIndex, parseLexicon} from "./lexicon"
@@ -97,7 +97,7 @@ function defaultSubcommand() {
       ),
       texts: Result.all(
         readdirSync(".")
-          .filter(matches(/.au$/))
+          .filter(matches(/\.au$/))
           .map(
             (filename) =>
               _(
@@ -115,11 +115,19 @@ function defaultSubcommand() {
       return texts.map(second((text) => toString(translate, text)))
     }),
     Result.map((texts) => {
-      texts.map(([filename, translated]) =>
-        console.log(filename, translated),
-      )
+      texts
+        .map(first(removeAuExtension))
+        .map(([filename, translated]) =>
+          writeFileSync(filename, translated),
+        )
     }),
   )
+}
+
+function first<A, B, Out>(
+  f: (arg: A) => Out,
+): (arg: [A, B]) => [Out, B] {
+  return ([a, b]) => [f(a), b]
 }
 
 function second<A, B, Out>(
@@ -134,4 +142,8 @@ function index(lexicon: Lexicon): LexiconIndex {
     lexiconIndex[lexeme.id] = lexeme.translation
   }
   return lexiconIndex
+}
+
+function removeAuExtension(filename: string): string {
+  return filename.replace(/\.au$/, "")
 }
