@@ -47,7 +47,7 @@ Audition translates sample texts like this:
 Producing output like this:
 
 ```
-> Im Arwen. Telin le thae.
+> Im Arwen. Telin le thaed.
 ```
 
 Based on a lexicon file that looks like this:
@@ -66,6 +66,8 @@ help,tha,
 inflections:
   1SG:
     - ["o([^aeiouy])$", "e$1in"]
+  INF:
+    - ["$", "ed"]
 ```
 
 ## Running `au`
