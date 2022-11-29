@@ -45,7 +45,7 @@ test("word generation", {
       w    r
     
     v:
-      i   0.1*u
+      i   u
        e  o
          a
     `
