@@ -135,6 +135,16 @@ test("parseGloss", {
       success(literal("áèöŷś")),
     )
   },
+
+  "ignores a leading ?"() {
+    // Language authors can use ? to mark generated words, to
+    // distinguish them from handcrafted ones.
+    expect(
+      parseGloss("implicit-literals", "?quack"),
+      equals,
+      success(literal("quack")),
+    )
+  },
 })
 
 export function parseGloss(

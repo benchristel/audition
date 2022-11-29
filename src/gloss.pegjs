@@ -28,7 +28,8 @@ ImplicitPointer
   = lexeme:Word {
     return {type: "pointer", lexeme}
   }
-Word = chars:[^~`!@#\$%\^&\*\(\)\=\+\[\]\{\}\\\|;:'",<\.>/\? \t\n\r]* { return text() }
+Word = "?"? chars:WordChars { return chars }
+WordChars = [^~`!@#\$%\^&\*\(\)\=\+\[\]\{\}\\\|;:'",<\.>/ \t\n\r]* { return text() }
 CompoundWithImplicitLiterals
   = "[" head:GlossWithImplicitLiterals tail:("+" GlossWithImplicitLiterals)* "]" {
     return {type: "compound", elements: [head, ...tail.map(([_, tr]) => tr)]}
