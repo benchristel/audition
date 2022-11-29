@@ -182,4 +182,15 @@ export namespace Result {
       }
     }
   }
+
+  export function assert<T>(r: Result<T, any>): T {
+    switch (r.type) {
+      case "success":
+        return r.value
+      case "failure":
+        throw r.detail
+      default:
+        throw exhausted(r)
+    }
+  }
 }

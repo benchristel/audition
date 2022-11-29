@@ -7,6 +7,7 @@ import "./lexicon"
 import "./translator"
 import "./args"
 import "./text"
+import "./generator"
 
 runTests(getAllTests())
   .then(formatTestResultsAsText)

@@ -8,3 +8,7 @@ node_modules/.bin/pegjs \
   -o src/generated/gloss-parser.js \
   --allowed-start-rules GlossWithImplicitLiterals,GlossWithImplicitPointers \
   src/gloss.pegjs
+
+node_modules/.bin/pegjs \
+  -o src/generated/generator-rule-parser.js \
+  src/generator-rule.pegjs
