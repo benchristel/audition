@@ -1,6 +1,7 @@
-import {expect, equals, test, which} from "@benchristel/taste"
+import {expect, equals, test, which, is} from "@benchristel/taste"
 // @ts-ignore
 import GlossParser from "./generated/gloss-parser"
+import {exhausted} from "./lib/exhaust"
 import {failure, Result, success} from "./lib/result"
 import {matches} from "./lib/strings"
 
@@ -21,6 +22,10 @@ export type Compound = {type: "compound"; elements: Array<Gloss>}
     mode: "implicit-pointers" | "implicit-literals",
     raw: string,
   ) => Result<Gloss, string>
+  serializeGloss as (
+    mode: "implicit-pointers" | "implicit-literals",
+    gloss: Gloss,
+  ) => string
   literal as (s: string) => Literal
   pointer as (lexeme: string) => Pointer
   inflection as (
@@ -162,6 +167,70 @@ export function parseGloss(
   }
 }
 
+test("serializeGloss", {
+  "round-trips an implicit literal"() {
+    roundTrip("implicit-literals", "foo")
+  },
+
+  "round-trips an explicit literal"() {
+    roundTrip("implicit-pointers", "^foo")
+  },
+
+  "round-trips an implicit pointer"() {
+    roundTrip("implicit-pointers", "foo")
+  },
+
+  "round-trips an explicit pointer"() {
+    roundTrip("implicit-literals", "*foo")
+  },
+
+  "round-trips an inflected word"() {
+    roundTrip("implicit-literals", "foo#bar#baz")
+  },
+
+  "round-trips a compound"() {
+    roundTrip("implicit-literals", "[foo+bar+baz]")
+  },
+})
+
+export function serializeGloss(
+  mode: "implicit-pointers" | "implicit-literals",
+  gloss: Gloss,
+): string {
+  switch (gloss.type) {
+    case "literal":
+      switch (mode) {
+        case "implicit-literals":
+          return gloss.string
+        case "implicit-pointers":
+          return `^${gloss.string}`
+        default:
+          throw exhausted(mode)
+      }
+    case "pointer":
+      switch (mode) {
+        case "implicit-literals":
+          return `*${gloss.lexeme}`
+        case "implicit-pointers":
+          return gloss.lexeme
+        default:
+          throw exhausted(mode)
+      }
+    case "inflection": {
+      const stem = serializeGloss(mode, gloss.stem)
+      return `${stem}#${gloss.inflections.join("#")}`
+    }
+    case "compound": {
+      const elements = gloss.elements
+        .map((el) => serializeGloss(mode, el))
+        .join("+")
+      return `[${elements}]`
+    }
+    default:
+      throw exhausted(gloss)
+  }
+}
+
 export function literal(string: string): Literal {
   return {type: "literal", string}
 }
@@ -179,4 +248,15 @@ export function inflection(
 
 export function compound(elements: Array<Gloss>): Gloss {
   return {type: "compound", elements}
+}
+
+function roundTrip(
+  mode: "implicit-pointers" | "implicit-literals",
+  raw: string,
+) {
+  const result = serializeGloss(
+    mode,
+    Result.assert(parseGloss(mode, raw)),
+  )
+  expect(result, is, raw)
 }

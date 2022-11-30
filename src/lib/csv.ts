@@ -1,19 +1,10 @@
-import {expect, test, equals, which} from "@benchristel/taste"
+import {expect, test, equals, which, is} from "@benchristel/taste"
 import {success, failure, Result} from "./result"
 // @ts-ignore
 import Parser from "./generated/csv-parser"
+import {matches} from "./strings"
 
 const parser = Parser()
-
-export function parseCsv(
-  s: string,
-): Result<Array<Array<string>>, string> {
-  try {
-    return success(parser.parse(s))
-  } catch (e: any) {
-    return failure(e.message)
-  }
-}
 
 test("parseCsv", {
   "given an empty string"() {
@@ -102,6 +93,83 @@ test("parseCsv", {
     )
   },
 })
+
+export function parseCsv(
+  s: string,
+): Result<Array<Array<string>>, string> {
+  try {
+    return success(parser.parse(s))
+  } catch (e: any) {
+    return failure(e.message)
+  }
+}
+
+test("serializeCsv", {
+  "serializes an empty array of rows"() {
+    expect(serializeCsv([]), is, "")
+  },
+
+  "serializes a row with no cells"() {
+    expect(serializeCsv([[]]), is, "")
+  },
+
+  "serializes a row with one empty cell"() {
+    expect(serializeCsv([[""]]), is, "")
+  },
+
+  "serializes a row with two empty cells"() {
+    expect(serializeCsv([["", ""]]), is, ",")
+  },
+
+  "serializes a row with non-empty cells"() {
+    expect(serializeCsv([["foo", "bar"]]), is, "foo,bar")
+  },
+
+  "serializes multiple rows"() {
+    expect(
+      serializeCsv([
+        ["foo", "bar"],
+        ["baz", "kludge"],
+      ]),
+      is,
+      "foo,bar\nbaz,kludge",
+    )
+  },
+
+  "quotes a cell containing a comma"() {
+    expect(serializeCsv([["a,b"]]), is, `"a,b"`)
+  },
+
+  "quotes a cell containing a newline"() {
+    expect(serializeCsv([["a\nb"]]), is, `"a\nb"`)
+  },
+
+  "quotes a cell containing a carriage return"() {
+    expect(serializeCsv([["a\rb"]]), is, `"a\rb"`)
+  },
+
+  "escapes quotes in data"() {
+    expect(serializeCsv([[`a"b"`]]), is, `"a""b"""`)
+  },
+})
+
+export function serializeCsv(rows: Array<Array<string>>): string {
+  return rows.map(serializeRow).join("\n")
+}
+
+function serializeRow(row: Array<string>): string {
+  return row.map(serializeCell).join(",")
+}
+
+function serializeCell(cell: string): string {
+  if (needsQuotes(cell)) {
+    return `"${escapeQuotes(cell)}"`
+  }
+  return cell
+}
+
+const needsQuotes = matches(/[,\n\r"]/)
+const escapeQuotes = (s: string) => s.replace(/"/g, '""')
 
 const contains = (needle: string) => (haystack: string) =>
   haystack.indexOf(needle) >= 0

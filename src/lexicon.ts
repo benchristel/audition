@@ -1,11 +1,19 @@
-import {test, expect, equals, not, which} from "@benchristel/taste"
+import {
+  test,
+  expect,
+  equals,
+  not,
+  which,
+  is,
+  curry,
+} from "@benchristel/taste"
 import {failure, success, Result} from "./lib/result"
-import {parseCsv} from "./lib/csv"
+import {parseCsv, serializeCsv} from "./lib/csv"
 import {empty, setDiff} from "./lib/indexables"
 import {matches, trimMargin} from "./lib/strings"
 import "./lib/functions"
 import {_} from "./lib/functions"
-import {Gloss, literal, parseGloss} from "./gloss"
+import {Gloss, literal, parseGloss, serializeGloss} from "./gloss"
 import {fill} from "./lib/arrays"
 
 const REQUIRED_COLUMNS = ["id", "translation", "generator"]
@@ -283,6 +291,118 @@ export function parseLexicon(raw: string): ParseLexiconResult {
     ),
   )
 }
+
+test("serializeLexicon", {
+  "includes just the header row when there are no lexemes"() {
+    const result = serializeLexicon({
+      columnOrder: ["id", "translation", "generator"],
+      lexemes: [],
+    })
+    expect(result, is, "id,translation,generator")
+  },
+
+  "includes a lexeme"() {
+    const result = serializeLexicon({
+      columnOrder: ["id", "translation", "generator"],
+      lexemes: [
+        {
+          id: "the-id",
+          translation: literal("the-translation"),
+          generator: "the-generator",
+          userColumns: [],
+        },
+      ],
+    })
+    expect(
+      result,
+      is,
+      trimMargin`
+        id,translation,generator
+        the-id,the-translation,the-generator
+      `,
+    )
+  },
+
+  "puts data in the correct columns"() {
+    const result = serializeLexicon({
+      columnOrder: ["translation", "generator", "id"],
+      lexemes: [
+        {
+          id: "the-id",
+          translation: literal("the-translation"),
+          generator: "the-generator",
+          userColumns: [],
+        },
+      ],
+    })
+    expect(
+      result,
+      is,
+      trimMargin`
+        translation,generator,id
+        the-translation,the-generator,the-id
+      `,
+    )
+  },
+
+  "includes user-defined columns"() {
+    const result = serializeLexicon({
+      columnOrder: [
+        "foo",
+        "translation",
+        "bar",
+        "generator",
+        "id",
+        "baz",
+      ],
+      lexemes: [
+        {
+          id: "the-id",
+          translation: literal("the-translation"),
+          generator: "the-generator",
+          userColumns: ["the-foo", "the-bar", "the-baz"],
+        },
+      ],
+    })
+    expect(
+      result,
+      is,
+      trimMargin`
+        foo,translation,bar,generator,id,baz
+        the-foo,the-translation,the-bar,the-generator,the-id,the-baz
+      `,
+    )
+  },
+})
+
+export function serializeLexicon(lexicon: Lexicon): string {
+  return serializeCsv([
+    lexicon.columnOrder,
+    ...lexicon.lexemes.map(rowFromLexeme(lexicon.columnOrder)),
+  ])
+}
+
+const rowFromLexeme = curry(
+  (columnOrder: Array<string>, lexeme: Lexeme): Array<string> => {
+    let nextUserColumnIndex = 0
+    return columnOrder.map((column) => {
+      switch (column) {
+        case "id":
+          return lexeme.id
+        case "translation":
+          return serializeGloss(
+            "implicit-literals",
+            lexeme.translation,
+          )
+        case "generator":
+          return lexeme.generator
+        default:
+          return lexeme.userColumns[nextUserColumnIndex++]
+      }
+    })
+  },
+  "rowFromLexeme",
+)
 
 export function indexEntry(lexeme: Lexeme): [string, Gloss] {
   return [lexeme.id, lexeme.translation]
