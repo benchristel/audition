@@ -10,7 +10,7 @@ GlossWithImplicitLiterals
   }
 Literal
   = "^" string:Word {
-    return {type: "literal", string}
+    return {type: "literal", string, generated: false}
   }
 Pointer
   = "*" lexeme:Word {
@@ -21,15 +21,21 @@ InflectionList
     return inflections.map(([_, name]) => name)
   }
 ImplicitLiteral
+  = GeneratedLiteral / HandcraftedLiteral
+HandcraftedLiteral
   = string:Word {
-    return {type: "literal", string}
+    return {type: "literal", string, generated: false}
+  }
+GeneratedLiteral
+  = "?" string:Word {
+    return {type: "literal", string, generated: true}
   }
 ImplicitPointer
   = lexeme:Word {
     return {type: "pointer", lexeme}
   }
-Word = "?"? chars:WordChars { return chars }
-WordChars = [^~`!@#\$%\^&\*\(\)\=\+\[\]\{\}\\\|;:'",<\.>/ \t\n\r]* { return text() }
+Word = chars:WordChars { return chars }
+WordChars = [^~`!@#\$%\^&\*\(\)\=\+\[\]\{\}\\\|;:'",<\.>/? \t\n\r]* { return text() }
 CompoundWithImplicitLiterals
   = "[" head:GlossWithImplicitLiterals tail:("+" GlossWithImplicitLiterals)* "]" {
     return {type: "compound", elements: [head, ...tail.map(([_, tr]) => tr)]}

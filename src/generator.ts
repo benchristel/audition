@@ -1,4 +1,4 @@
-import {equals, expect, not, test} from "@benchristel/taste"
+import {curry, equals, expect, not, test} from "@benchristel/taste"
 import {failure, Result, success} from "./lib/result"
 // @ts-ignore-error
 import RuleParser from "./generated/generator-rule-parser"
@@ -13,7 +13,7 @@ import {mulberry32} from "./lib/random"
 
 const ruleParser = RuleParser()
 
-type WordGenerator = {
+export type WordGenerator = {
   [name: string]: Rule
 }
 
@@ -51,9 +51,7 @@ test("word generation", {
     `
     const generator = _(
       parseGenerator(src),
-      Result.flatMap((g) =>
-        compileGenerator(g, mulberry32(0xc0ffee)),
-      ),
+      Result.flatMap(compileGenerator(mulberry32(0xc0ffee))),
       Result.assert,
     )
     const words = []
@@ -214,7 +212,9 @@ test("parseGenerator", {
   },
 })
 
-function parseGenerator(raw: string): Result<WordGenerator, string> {
+export function parseGenerator(
+  raw: string,
+): Result<WordGenerator, string> {
   const rules: {[name: string]: Rule} = {}
   try {
     raw
@@ -233,7 +233,7 @@ function parseGenerator(raw: string): Result<WordGenerator, string> {
 test("compileGenerator", {
   "fails when a rule has no expansions"() {
     expect(
-      compileGenerator({"the-rule": []}, () => 0),
+      compileGenerator(() => 0, {"the-rule": []}),
       equals,
       failure("Generator rule 'the-rule' lists no expansions"),
     )
@@ -243,66 +243,51 @@ test("compileGenerator", {
 test("a compiled generator", {
   "generates text"() {
     const generator = Result.assert(
-      compileGenerator(
-        {"the-rule": [expansion(1, [literal("foo")])]},
-        () => 0,
-      ),
+      compileGenerator(() => 0, {
+        "the-rule": [expansion(1, [literal("foo")])],
+      }),
     )
     expect(generator("the-rule"), equals, "foo")
   },
 
   "generates text from a pattern with multiple segments"() {
     const generator = Result.assert(
-      compileGenerator(
-        {
-          "rule-1": [
-            expansion(1, [literal("foo"), pointer("rule-2")]),
-          ],
-          "rule-2": [expansion(1, [literal("bar")])],
-        },
-        () => 0,
-      ),
+      compileGenerator(() => 0, {
+        "rule-1": [expansion(1, [literal("foo"), pointer("rule-2")])],
+        "rule-2": [expansion(1, [literal("bar")])],
+      }),
     )
     expect(generator("rule-1"), equals, "foobar")
   },
 
   "uses the 'default' rule to generate if no rule name is specified"() {
     const generator = Result.assert(
-      compileGenerator(
-        {
-          "default": [expansion(1, [literal("foo")])],
-          "not-default": [expansion(1, [literal("bar")])],
-        },
-        () => 0,
-      ),
+      compileGenerator(() => 0, {
+        "default": [expansion(1, [literal("foo")])],
+        "not-default": [expansion(1, [literal("bar")])],
+      }),
     )
     expect(generator(), equals, "foo")
   },
 
   "puts underscores around a missing rule name"() {
     const generator = Result.assert(
-      compileGenerator(
-        {
-          "the-rule": [expansion(1, [pointer("foo")])],
-        },
-        () => 0,
-      ),
+      compileGenerator(() => 0, {
+        "the-rule": [expansion(1, [pointer("foo")])],
+      }),
     )
-    expect(generator("the-rule"), equals, "_foo?_")
+    expect(generator("the-rule"), equals, "_foo_")
   },
 
   "generates words at random"() {
     let randomValue = 0
     const generator = Result.assert(
-      compileGenerator(
-        {
-          "the-rule": [
-            expansion(1, [literal("foo")]),
-            expansion(1, [literal("bar")]),
-          ],
-        },
-        () => randomValue,
-      ),
+      compileGenerator(() => randomValue, {
+        "the-rule": [
+          expansion(1, [literal("foo")]),
+          expansion(1, [literal("bar")]),
+        ],
+      }),
     )
     expect(generator("the-rule"), equals, "foo")
     randomValue = 0.999
@@ -310,43 +295,47 @@ test("a compiled generator", {
   },
 })
 
-function compileGenerator(
-  data: WordGenerator,
-  rng: () => number,
-): Result<(ruleName?: string) => string, string> {
-  const randomizers: {[ruleName: string]: () => Expansion} = {}
-  for (const rule in data) {
-    if (empty(data[rule])) {
-      return failure(`Generator rule '${rule}' lists no expansions`)
+export const compileGenerator = curry(
+  (
+    rng: () => number,
+    data: WordGenerator,
+  ): Result<(ruleName?: string) => string, string> => {
+    const randomizers: {[ruleName: string]: () => Expansion} = {}
+    for (const rule in data) {
+      if (empty(data[rule])) {
+        return failure(`Generator rule '${rule}' lists no expansions`)
+      }
+      randomizers[rule] = WeightedRandomVariable(
+        data[rule],
+        prop("weight"),
+        rng,
+      )
     }
-    randomizers[rule] = WeightedRandomVariable(
-      data[rule],
-      prop("weight"),
-      rng,
-    )
-  }
 
-  function generate(ruleName: string = "default"): string {
-    const randomizer = randomizers[ruleName]
-    if (randomizer == null) {
-      return `_${ruleName}?_`
+    function generate(ruleName?: string): string {
+      ruleName = ruleName || "default"
+      const randomizer = randomizers[ruleName]
+      if (randomizer == null) {
+        return `_${ruleName}_`
+      }
+      return randomizer()
+        .pattern.map((segment) => {
+          switch (segment.type) {
+            case "literal":
+              return segment.text
+            case "pointer":
+              return generate(segment.ruleName)
+            default:
+              throw exhausted(segment)
+          }
+        })
+        .join("")
     }
-    return randomizer()
-      .pattern.map((segment) => {
-        switch (segment.type) {
-          case "literal":
-            return segment.text
-          case "pointer":
-            return generate(segment.ruleName)
-          default:
-            throw exhausted(segment)
-        }
-      })
-      .join("")
-  }
 
-  return success(generate)
-}
+    return success(generate)
+  },
+  "compileGenerator",
+)
 
 function expansion(
   weight: number,

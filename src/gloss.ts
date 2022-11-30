@@ -9,7 +9,11 @@ const glossParser = GlossParser()
 
 export type Gloss = Literal | Pointer | Inflection | Compound
 
-export type Literal = {type: "literal"; string: string}
+export type Literal = {
+  type: "literal"
+  string: string
+  generated: boolean
+}
 export type Pointer = {type: "pointer"; lexeme: string}
 export type Inflection = {
   type: "inflection"
@@ -141,13 +145,13 @@ test("parseGloss", {
     )
   },
 
-  "ignores a leading ?"() {
+  "parses a generated literal with leading ?"() {
     // Language authors can use ? to mark generated words, to
     // distinguish them from handcrafted ones.
     expect(
       parseGloss("implicit-literals", "?quack"),
       equals,
-      success(literal("quack")),
+      success(literal("quack", true)),
     )
   },
 })
@@ -191,6 +195,10 @@ test("serializeGloss", {
   "round-trips a compound"() {
     roundTrip("implicit-literals", "[foo+bar+baz]")
   },
+
+  "round-trips a generated literal"() {
+    roundTrip("implicit-literals", "?foo")
+  },
 })
 
 export function serializeGloss(
@@ -201,7 +209,7 @@ export function serializeGloss(
     case "literal":
       switch (mode) {
         case "implicit-literals":
-          return gloss.string
+          return (gloss.generated ? "?" : "") + gloss.string
         case "implicit-pointers":
           return `^${gloss.string}`
         default:
@@ -231,8 +239,11 @@ export function serializeGloss(
   }
 }
 
-export function literal(string: string): Literal {
-  return {type: "literal", string}
+export function literal(
+  string: string,
+  generated: boolean = false,
+): Literal {
+  return {type: "literal", string, generated}
 }
 
 export function pointer(lexeme: string): Pointer {

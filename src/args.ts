@@ -12,6 +12,7 @@ export type AuArgs =
       subcommand: "tr"
       glossesToTranslate: Array<string>
     } & GlobalFlags)
+  | ({subcommand: "gen"} & GlobalFlags)
 
 const blank: Args = {positionalArgs: [], options: {}}
 
@@ -56,6 +57,21 @@ test("parseAuArgs", {
     )
   },
 
+  "parses the `gen` subcommand"() {
+    const result = parseAuArgs({
+      options: {C: "workdir"},
+      positionalArgs: ["gen"],
+    })
+    expect(
+      result,
+      equals,
+      success({
+        workingDirectory: "workdir",
+        subcommand: "gen",
+      }),
+    )
+  },
+
   "fails to parse an unrecognized subcommand"() {
     const result = parseAuArgs({
       ...blank,
@@ -69,16 +85,21 @@ export function parseAuArgs(raw: Args): Result<AuArgs, string> {
   const workingDirectory =
     typeof raw.options.C === "string" ? raw.options.C : "."
 
-  if (raw.positionalArgs[0] === "tr") {
-    return _(
-      parseTrSubcommand(raw),
-      Result.map((args) => ({...args, workingDirectory})),
-    )
-  } else if (!empty(raw.positionalArgs)) {
-    return failure("Unrecognized subcommand " + raw.positionalArgs[0])
+  switch (raw.positionalArgs[0]) {
+    case undefined:
+      return success({subcommand: "", workingDirectory})
+    case "tr":
+      return _(
+        parseTrSubcommand(raw),
+        Result.map((args) => ({...args, workingDirectory})),
+      )
+    case "gen":
+      return success({subcommand: "gen", workingDirectory})
+    default:
+      return failure(
+        "Unrecognized subcommand " + raw.positionalArgs[0],
+      )
   }
-
-  return success({subcommand: "", workingDirectory})
 }
 
 function parseTrSubcommand(
