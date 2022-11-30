@@ -1,17 +1,17 @@
 > In a hole in the ground there lived a hobbit.
 
-__Lil wernean liln dalu se te man'iareve.__
+__Ten lale denn lani de narretar run.__
 
 > Not a nasty, dirty, wet hole, full of the ends of worms and an oozy smell,
 
-__Zusmain mier wernean venlea, siata, dilpo, bi kaldunen enetion
-tasennuni mier dehani du tenan dnaileta,__
+__Sola mil lale neapior, kossainia, sarhen, ler heyaren shiarmusn
+lielseani mil uwioi han lertie etaita,__
 
 > nor yet a dry, bare, sandy hole, with nothing in it to sit down on or to eat.
 
-__du zusmain mier wernean dnialpe, riesailen, nerrelta, bi mun zusmain lil pi do
-lohenyada du zusmain dno ohida.__
+__han sola mil lale line, tienveren, tenkata, ler dan sola den na dain
+teyiantanyada han sola dnain lida.__
 
 > It was a hobbit-hole, and that means comfort.
 
-__Se we wernean mier man'iareve pi, bi mansen yelun rintada.__
+__De le lale mil run na, ler tes nielan dunduda.__

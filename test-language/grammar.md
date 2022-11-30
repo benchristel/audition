@@ -2,12 +2,12 @@
 
 ## Definite article
 
-The definite article in __Siolen__ is __mea__. It precedes the noun it modifies.
+The definite article in __Siolen__ is __nis__. It precedes the noun it modifies.
 
-> __mea ha__ "the bear"
+> __nis danul__ "the bear"
 
 ## Adjectives
 
 Adjectives follow their head noun.
 
-> __mea ha nantio__ "the blue bear"
+> __nis danul senfe__ "the blue bear"

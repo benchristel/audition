@@ -7,6 +7,7 @@ import {
 } from "./generator"
 import {Gloss, literal, parseGloss, serializeGloss} from "./gloss"
 import {
+  Lexeme,
   Lexicon,
   LexiconIndex,
   parseLexicon,
@@ -153,12 +154,7 @@ function gen(
       const updatedLexicon = {
         ...lexicon,
         lexemes: lexicon.lexemes.map((lexeme) => {
-          if (
-            serializeGloss(
-              "implicit-literals",
-              lexeme.translation,
-            )[0] === "?"
-          ) {
+          if (needsRegeneration(lexeme)) {
             return {
               ...lexeme,
               translation: literal(`?${generator(lexeme.generator)}`),
@@ -171,6 +167,14 @@ function gen(
       writeFileSync("lexicon.csv", serializeLexicon(updatedLexicon))
     }),
   )
+
+  function needsRegeneration(lexeme: Lexeme): boolean {
+    const lexemeAsString = serializeGloss(
+      "implicit-literals",
+      lexeme.translation,
+    )
+    return lexemeAsString === "" || lexemeAsString[0] === "?"
+  }
 }
 
 function first<A, B, Out>(
