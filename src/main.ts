@@ -42,7 +42,7 @@ export function main() {
 
   switch (args.subcommand) {
     case "":
-      _(defaultSubcommand(), exitOnFailure)
+      _(defaultSubcommand(args), exitOnFailure)
       break
     case "tr":
       _(tr(args), exitOnFailure)
@@ -55,7 +55,7 @@ export function main() {
   }
 }
 
-function defaultSubcommand() {
+function defaultSubcommand(args: Extract<AuArgs, {subcommand: ""}>) {
   type Inputs = {
     lexicon: Result<Lexicon, string>
     morphology: Result<Morphology, string>
@@ -88,7 +88,11 @@ function defaultSubcommand() {
     }),
     Result.map(({lexicon, morphology, texts}) => {
       const translate = Translator(index(lexicon), morphology)
-      return texts.map(second((text) => toString(translate, text)))
+      return texts.map(
+        second(
+          toString(translate, {includeSource: args.includeSources}),
+        ),
+      )
     }),
     Result.map((texts) => {
       texts
@@ -135,36 +139,20 @@ function gen(
   args: Extract<AuArgs, {subcommand: "gen"}>,
 ): Result<void, string> {
   type Inputs = {
-    lexicon: Result<Lexicon, string>
     generator: Result<(ruleName?: string) => string, string>
   }
   return _(
     Result.objAll<Inputs, string>({
-      lexicon: _(
-        readFileSync("lexicon.csv").toString(),
-        parseLexicon,
-      ),
       generator: _(
         readFileSync("generator.txt").toString(),
         parseGenerator,
         Result.flatMap(compileGenerator(Math.random)),
       ),
     }),
-    Result.map(({lexicon, generator}) => {
-      const updatedLexicon = {
-        ...lexicon,
-        lexemes: lexicon.lexemes.map((lexeme) => {
-          if (needsRegeneration(lexeme)) {
-            return {
-              ...lexeme,
-              translation: literal(`?${generator(lexeme.generator)}`),
-            }
-          } else {
-            return lexeme
-          }
-        }),
+    Result.map(({generator}) => {
+      for (let i = 0; i < 30; i++) {
+        console.log(generator(args.generator))
       }
-      writeFileSync("lexicon.csv", serializeLexicon(updatedLexicon))
     }),
   )
 

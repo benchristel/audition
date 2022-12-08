@@ -7,16 +7,16 @@ import {failure, Result, success} from "./lib/result"
 type GlobalFlags = {workingDirectory: string}
 
 export type AuArgs =
-  | ({subcommand: ""} & GlobalFlags)
+  | ({subcommand: ""; includeSources: boolean} & GlobalFlags)
   | ({
       subcommand: "tr"
       glossesToTranslate: Array<string>
     } & GlobalFlags)
-  | ({subcommand: "gen"} & GlobalFlags)
+  | ({subcommand: "gen"; generator: string | undefined} & GlobalFlags)
 
 const blank: Args = {positionalArgs: [], options: {}}
 
-const baseArgs: AuArgs = Object.freeze({
+const baseArgs = Object.freeze({
   subcommand: "",
   workingDirectory: ".",
 })
@@ -24,7 +24,11 @@ const baseArgs: AuArgs = Object.freeze({
 test("parseAuArgs", {
   "defaults workingDirectory to ."() {
     const result = parseAuArgs(blank)
-    expect(result, equals, success(baseArgs))
+    expect(
+      result,
+      equals,
+      success({...baseArgs, includeSources: false}),
+    )
   },
 
   "takes workingDirectory from the -C argument"() {
@@ -32,13 +36,34 @@ test("parseAuArgs", {
     expect(
       result,
       equals,
-      success({...baseArgs, workingDirectory: "foo"} as AuArgs),
+      success({
+        ...baseArgs,
+        workingDirectory: "foo",
+        includeSources: false,
+      } as AuArgs),
     )
   },
 
   "defaults workingDirectory if -C is passed with no argument"() {
     const result = parseAuArgs({...blank, options: {C: true}})
-    expect(result, equals, success(baseArgs))
+    expect(
+      result,
+      equals,
+      success({...baseArgs, includeSources: false}),
+    )
+  },
+
+  "parses the default subcommand with the -s argument"() {
+    const result = parseAuArgs({...blank, options: {s: true}})
+    expect(
+      result,
+      equals,
+      success({
+        subcommand: "",
+        workingDirectory: ".",
+        includeSources: true,
+      }),
+    )
   },
 
   "parses the `tr` subcommand"() {
@@ -66,8 +91,25 @@ test("parseAuArgs", {
       result,
       equals,
       success({
-        workingDirectory: "workdir",
         subcommand: "gen",
+        workingDirectory: "workdir",
+        generator: undefined,
+      }),
+    )
+  },
+
+  "parses the `gen` subcommand, when the user specifies a generator"() {
+    const result = parseAuArgs({
+      options: {C: "workdir"},
+      positionalArgs: ["gen", "my-generator"],
+    })
+    expect(
+      result,
+      equals,
+      success({
+        subcommand: "gen",
+        workingDirectory: "workdir",
+        generator: "my-generator",
       }),
     )
   },
@@ -87,14 +129,22 @@ export function parseAuArgs(raw: Args): Result<AuArgs, string> {
 
   switch (raw.positionalArgs[0]) {
     case undefined:
-      return success({subcommand: "", workingDirectory})
+      return success({
+        subcommand: "",
+        workingDirectory,
+        includeSources: Boolean(raw.options.s),
+      })
     case "tr":
       return _(
         parseTrSubcommand(raw),
         Result.map((args) => ({...args, workingDirectory})),
       )
     case "gen":
-      return success({subcommand: "gen", workingDirectory})
+      return success({
+        subcommand: "gen",
+        workingDirectory,
+        generator: raw.positionalArgs[1],
+      })
     default:
       return failure(
         "Unrecognized subcommand " + raw.positionalArgs[0],

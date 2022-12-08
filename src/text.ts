@@ -6,7 +6,7 @@ import {
   which,
   debug,
 } from "@benchristel/taste"
-import {Gloss, parseGloss} from "./gloss"
+import {Gloss, parseGloss, serializeGloss} from "./gloss"
 import {_} from "./lib/functions"
 import {failure, Result, success} from "./lib/result"
 import {matches} from "./lib/strings"
@@ -85,6 +85,19 @@ test("parse and toString", {
       failure(which(matches(/Failed to parse "\[\["/))),
     )
   },
+
+  "outputs the source glosses if requested"() {
+    const result = _(
+      "__foo!__",
+      parseText,
+      Result.map(toString(() => "translated", {includeSource: true})),
+    )
+    expect(
+      result,
+      equals,
+      success("__<x-out>translated<x-src>foo</x-src></x-out>!__"),
+    )
+  },
 })
 
 export function parseText(raw: string): Result<Text, string> {
@@ -99,18 +112,32 @@ export function parseText(raw: string): Result<Text, string> {
   return Result.all(raw.split(/(__)/).flatMap(parseSegment))
 }
 
-export const toString = curry(
-  (translate: TranslateFn, text: Text): string => {
+export type ToStringOptions = {includeSource: boolean}
+
+export const toString =
+  (
+    translate: TranslateFn,
+    options: ToStringOptions = {includeSource: false},
+  ) =>
+  (text: Text): string => {
+    const decorateTranslation = options.includeSource
+      ? (s: string, gloss: Gloss) =>
+          `<x-out>${s}<x-src>${serializeGloss(
+            "implicit-pointers",
+            gloss,
+          )}</x-src></x-out>`
+      : (s: string) => s
     return text
       .map((segment) =>
         segment.translatable
-          ? translate(segment.gloss)
+          ? decorateTranslation(
+              translate(segment.gloss),
+              segment.gloss,
+            )
           : segment.string,
       )
       .join("")
-  },
-  "toString",
-)
+  }
 
 function parseGlosses(
   rawSegment: string,
