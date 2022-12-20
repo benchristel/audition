@@ -131,15 +131,11 @@ function loadTexts(): Result<Array<[string, Text]>, string> {
   return Result.all(
     readdirSync(".")
       .filter(matches(/\.au$/))
-      .map(
-        (filename) =>
-          _(
-            [
-              success(filename),
-              parseText(readFileSync(filename).toString()),
-            ] as [Result<string, string>, Result<Text, string>],
-            Result.all,
-          ) as Result<[string, Text], string>,
+      .map((filename) =>
+        Result.all([
+          success(filename),
+          parseText(readFileSync(filename).toString()),
+        ]),
       ),
   )
 }
