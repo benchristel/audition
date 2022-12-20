@@ -16,6 +16,7 @@ import {
 import {parseArgs} from "./lib/args"
 import {exhausted} from "./lib/exhaust"
 import {_} from "./lib/functions"
+import {exitOnFailure} from "./lib/process"
 import {Result, success} from "./lib/result"
 import {matches} from "./lib/strings"
 import {Morphology, parseMorphology} from "./morphology"
@@ -27,28 +28,20 @@ export function main() {
     process.argv.slice(2),
     parseArgs,
     parseAuArgs,
-    Result.recover<AuArgs, string>((failure) => {
-      console.error(failure.detail)
-      process.exit(1)
-    }),
+    exitOnFailure(),
   )
-
-  const exitOnFailure = Result.recover<void, string>((failure) => {
-    console.error(failure.detail)
-    process.exit(1)
-  })
 
   process.chdir(args.workingDirectory)
 
   switch (args.subcommand) {
     case "":
-      _(defaultSubcommand(args), exitOnFailure)
+      _(defaultSubcommand(args), exitOnFailure())
       break
     case "tr":
-      _(tr(args), exitOnFailure)
+      _(tr(args), exitOnFailure())
       break
     case "gen":
-      _(gen(args), exitOnFailure)
+      _(gen(args), exitOnFailure())
       break
     default:
       throw exhausted(args)
