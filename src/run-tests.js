@@ -8,6 +8,7 @@ import "./translator"
 import "./args"
 import "./text"
 import "./generator"
+import "./main"
 
 runTests(getAllTests())
   .then(formatTestResultsAsText)
