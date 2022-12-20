@@ -33,19 +33,20 @@ export function main() {
 
   process.chdir(args.workingDirectory)
 
-  switch (args.subcommand) {
-    case "":
-      _(defaultSubcommand(args), exitOnFailure())
-      break
-    case "tr":
-      _(tr(args), exitOnFailure())
-      break
-    case "gen":
-      _(gen(args), exitOnFailure())
-      break
-    default:
-      throw exhausted(args)
-  }
+  const result = (() => {
+    switch (args.subcommand) {
+      case "":
+        return defaultSubcommand(args)
+      case "tr":
+        return tr(args)
+      case "gen":
+        return gen(args)
+      default:
+        throw exhausted(args)
+    }
+  })()
+
+  _(result, exitOnFailure)
 }
 
 function defaultSubcommand(args: Extract<AuArgs, {subcommand: ""}>) {
