@@ -149,14 +149,6 @@ function gen(
       }
     }),
   )
-
-  function needsRegeneration(lexeme: Lexeme): boolean {
-    const lexemeAsString = serializeGloss(
-      "implicit-literals",
-      lexeme.translation,
-    )
-    return lexemeAsString === "" || lexemeAsString[0] === "?"
-  }
 }
 
 function first<A, B, Out>(
