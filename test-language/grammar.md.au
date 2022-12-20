@@ -6,6 +6,10 @@ The definite article in __LANGNAME__ is __DEF__. It precedes the noun it modifie
 
 > __DEF bear__ "the bear"
 
+| actual | expected
+| ---- | --- |
+| test: __DEF bear__ | aw avva
+
 ## Adjectives
 
 Adjectives follow their head noun.

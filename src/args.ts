@@ -13,6 +13,7 @@ export type AuArgs =
       glossesToTranslate: Array<string>
     } & GlobalFlags)
   | ({subcommand: "gen"; generator: string | undefined} & GlobalFlags)
+  | ({subcommand: "test"} & GlobalFlags)
 
 const blank: Args = {positionalArgs: [], options: {}}
 
@@ -128,6 +129,7 @@ export function parseAuArgs(raw: Args): Result<AuArgs, string> {
     typeof raw.options.C === "string" ? raw.options.C : "."
 
   switch (raw.positionalArgs[0]) {
+    case "test":
     case undefined:
       return success({
         subcommand: "",
@@ -145,6 +147,8 @@ export function parseAuArgs(raw: Args): Result<AuArgs, string> {
         workingDirectory,
         generator: raw.positionalArgs[1],
       })
+    // case "test":
+    //   return success({});
     default:
       return failure(
         "Unrecognized subcommand " + raw.positionalArgs[0],

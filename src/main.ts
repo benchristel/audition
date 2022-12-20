@@ -4,7 +4,7 @@ import {compileGenerator, parseGenerator} from "./generator"
 import {Gloss, parseGloss} from "./gloss"
 import {Lexicon, LexiconIndex, parseLexicon} from "./lexicon"
 import {parseArgs} from "./lib/args"
-import {exhausted} from "./lib/exhaust"
+import {exhausted as unreachable} from "./lib/exhaust"
 import {_} from "./lib/functions"
 import {exitOnFailure} from "./lib/process"
 import {Result, success} from "./lib/result"
@@ -31,8 +31,10 @@ export function main() {
         return tr(args)
       case "gen":
         return gen(args)
+      case "test":
+        return true
       default:
-        throw exhausted(args)
+        throw unreachable(args)
     }
   })()
 
@@ -78,6 +80,7 @@ function tr(
     glossesToTranslate: Result<Array<Gloss>, string>
   }
   return _(
+    // Load the inputs
     Result.objAll<Inputs, string>({
       lexicon: loadLexicon(),
       morphology: loadMorphology(),
@@ -87,6 +90,7 @@ function tr(
         ),
       ),
     }),
+    // Do the actual work
     Result.map(({lexicon, morphology, glossesToTranslate}) => {
       const translate = Translator(index(lexicon), morphology)
       console.log(glossesToTranslate.map(translate).join(" "))
