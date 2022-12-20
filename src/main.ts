@@ -1,18 +1,8 @@
 import {readdirSync, readFileSync, writeFileSync} from "fs"
 import {AuArgs, parseAuArgs} from "./args"
-import {
-  compileGenerator,
-  parseGenerator,
-  WordGenerator,
-} from "./generator"
-import {Gloss, literal, parseGloss, serializeGloss} from "./gloss"
-import {
-  Lexeme,
-  Lexicon,
-  LexiconIndex,
-  parseLexicon,
-  serializeLexicon,
-} from "./lexicon"
+import {compileGenerator, parseGenerator} from "./generator"
+import {Gloss, parseGloss} from "./gloss"
+import {Lexicon, LexiconIndex, parseLexicon} from "./lexicon"
 import {parseArgs} from "./lib/args"
 import {exhausted} from "./lib/exhaust"
 import {_} from "./lib/functions"
@@ -57,28 +47,9 @@ function defaultSubcommand(args: Extract<AuArgs, {subcommand: ""}>) {
   }
   return _(
     Result.objAll<Inputs, string>({
-      lexicon: _(
-        readFileSync("lexicon.csv").toString(),
-        parseLexicon,
-      ),
-      morphology: _(
-        readFileSync("morphology.yaml").toString(),
-        parseMorphology,
-      ),
-      texts: Result.all(
-        readdirSync(".")
-          .filter(matches(/\.au$/))
-          .map(
-            (filename) =>
-              _(
-                [
-                  success(filename),
-                  parseText(readFileSync(filename).toString()),
-                ] as [Result<string, string>, Result<Text, string>],
-                Result.all,
-              ) as Result<[string, Text], string>,
-          ),
-      ),
+      lexicon: loadLexicon(),
+      morphology: loadMorphology(),
+      texts: loadTexts(),
     }),
     Result.map(({lexicon, morphology, texts}) => {
       const translate = Translator(index(lexicon), morphology)
@@ -108,14 +79,8 @@ function tr(
   }
   return _(
     Result.objAll<Inputs, string>({
-      lexicon: _(
-        readFileSync("lexicon.csv").toString(),
-        parseLexicon,
-      ),
-      morphology: _(
-        readFileSync("morphology.yaml").toString(),
-        parseMorphology,
-      ),
+      lexicon: loadLexicon(),
+      morphology: loadMorphology(),
       glossesToTranslate: Result.all(
         args.glossesToTranslate.map((g) =>
           parseGloss("implicit-pointers", g),
@@ -148,6 +113,34 @@ function gen(
         console.log(generator(args.generator))
       }
     }),
+  )
+}
+
+function loadLexicon(): Result<Lexicon, string> {
+  return _(readFileSync("lexicon.csv").toString(), parseLexicon)
+}
+
+function loadMorphology(): Result<Morphology, string> {
+  return _(
+    readFileSync("morphology.yaml").toString(),
+    parseMorphology,
+  )
+}
+
+function loadTexts(): Result<Array<[string, Text]>, string> {
+  return Result.all(
+    readdirSync(".")
+      .filter(matches(/\.au$/))
+      .map(
+        (filename) =>
+          _(
+            [
+              success(filename),
+              parseText(readFileSync(filename).toString()),
+            ] as [Result<string, string>, Result<Text, string>],
+            Result.all,
+          ) as Result<[string, Text], string>,
+      ),
   )
 }
 
