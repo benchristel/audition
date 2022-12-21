@@ -32,7 +32,7 @@ Audition is not an extraordinarily flexible tool. It was designed around the syn
 
 1. [Install `bun`](https://bun.sh/) and [`yarn`](https://yarnpkg.com/getting-started/install).
 2. Clone this repo and `cd` in.
-3. `yarn install`
+3. `yarn install`. If you forget to do this, things will be subtly broken as of the latest `bun` version (Dec 21, 2022)!
 4. `./au -C test-language`
 5. Mess with the files in `test-language/` and see what happens.
 
