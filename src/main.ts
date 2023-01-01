@@ -36,7 +36,7 @@ export function main() {
     }
   })()
 
-  _(result, exitOnFailure)
+  exitOnFailure()(result)
 }
 
 function defaultSubcommand(args: Extract<AuArgs, {subcommand: ""}>) {
