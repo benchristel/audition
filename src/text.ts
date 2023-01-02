@@ -98,6 +98,17 @@ test("parse and toString", {
       success("__<x-out>translated<x-src>foo</x-src></x-out>!__"),
     )
   },
+
+  "treats hyphens as punctuation"() {
+    // I'd like to also treat em and en dashes as punctuation, but Bun has
+    // a bug that makes it impossible to match them with a regex.
+    const result = _(
+      "__a-b__",
+      parseText,
+      Result.map(toString(() => "tr")),
+    )
+    expect(result, equals, success("__tr-tr__"))
+  },
 })
 
 export function parseText(raw: string): Result<Text, string> {
@@ -143,7 +154,7 @@ function parseGlosses(
   rawSegment: string,
 ): Array<Result<Segment, string>> {
   return rawSegment
-    .split(/([~`!@\$%&\(\)\=\{\}\\\|;:'",<\.>/\? \t\n\r]+)/)
+    .split(/([~`!@\$%&\(\)\-\=\{\}\\\|;:'",<\.>/\? \t\n\r]+)/)
     .map(
       (s, i) =>
         (i % 2 === 0 && s.length
