@@ -20,5 +20,8 @@
   "dependencies": {
     "@benchristel/taste": "^0.4.0",
     "yaml": "^2.1.3"
+  },
+  "bin": {
+    "au": "./src/cli.js"
   }
 }
