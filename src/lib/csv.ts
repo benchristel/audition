@@ -1,10 +1,11 @@
 import {expect, test, equals, which, is} from "@benchristel/taste"
 import {success, failure, Result} from "./result"
 // @ts-ignore
-import Parser from "./generated/csv-parser"
+import Parser from "./generated/csv-parser.cjs"
 import {matches} from "./strings"
 
-const parser = Parser()
+// @ts-ignore
+const parser = typeof Parser === "function" ? Parser() : Parser
 
 test("parseCsv", {
   "given an empty string"() {
