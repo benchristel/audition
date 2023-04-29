@@ -4,14 +4,14 @@ pegnocheck() {
   local input=$1
   local pegArgs=${@:3}
   local output=$2
-  
+
   echo "// @ts-nocheck" > $output
   node_modules/.bin/pegjs -o - $pegArgs $input >> $output
 }
 
-pegnocheck src/lib/csv.pegjs src/lib/generated/csv-parser.ts
+pegnocheck src/lib/csv.pegjs src/lib/generated/csv-parser.cjs
 
-pegnocheck src/gloss.pegjs src/generated/gloss-parser.ts \
+pegnocheck src/gloss.pegjs src/generated/gloss-parser.cjs \
   --allowed-start-rules GlossWithImplicitLiterals,GlossWithImplicitPointers
   
-pegnocheck src/generator-rule.pegjs src/generated/generator-rule-parser.ts
+pegnocheck src/generator-rule.pegjs src/generated/generator-rule-parser.cjs

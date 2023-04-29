@@ -1,11 +1,12 @@
 import {expect, equals, test, which, is} from "@benchristel/taste"
 // @ts-ignore
-import GlossParser from "./generated/gloss-parser"
+import GlossParser from "./generated/gloss-parser.cjs"
 import {exhausted} from "./lib/exhaust"
 import {failure, Result, success} from "./lib/result"
 import {matches} from "./lib/strings"
 
-const glossParser = GlossParser()
+// @ts-ignore
+const glossParser: any = typeof GlossParser === "function" ? GlossParser() : GlossParser
 
 export type Gloss = Literal | Pointer | Inflection | Compound
 

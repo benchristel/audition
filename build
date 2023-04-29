@@ -1,0 +1,12 @@
+#!/bin/sh -ex
+
+rm -rf .tsbuild
+rm -rf .esbuild
+yarn peg
+tsc
+cp -r ./src/generated .tsbuild/generated
+cp -r ./src/lib/generated .tsbuild/lib/generated
+esbuild .tsbuild/cli.js --bundle \
+    --platform=node --target=node18 \
+    --outfile=.esbuild/cli.cjs
+pkg --targets node18 .esbuild/cli.cjs --output audition

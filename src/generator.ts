@@ -1,7 +1,7 @@
 import {curry, equals, expect, not, test} from "@benchristel/taste"
 import {failure, Result, success} from "./lib/result"
 // @ts-ignore-error
-import RuleParser from "./generated/generator-rule-parser"
+import RuleParser from "./generated/generator-rule-parser.cjs"
 import {empty} from "./lib/indexables"
 import {trimMargin} from "./lib/strings"
 import {prop} from "./lib/objects"
@@ -11,7 +11,8 @@ import {debug} from "@benchristel/taste"
 import {_} from "./lib/functions"
 import {mulberry32} from "./lib/random"
 
-const ruleParser = RuleParser()
+// @ts-ignore
+const ruleParser: any = typeof RuleParser === "function" ? RuleParser() : RuleParser
 
 export type WordGenerator = {
   [name: string]: Rule
