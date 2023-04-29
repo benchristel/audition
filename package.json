@@ -15,13 +15,15 @@
   "scripts": {
     "test": "./test",
     "peg": "./peg",
-    "format": "node_modules/.bin/prettier -w src"
+    "format": "node_modules/.bin/prettier -w src",
+    "build": "tsc && pkg ."
   },
   "dependencies": {
     "@benchristel/taste": "^0.4.0",
     "yaml": "^2.1.3"
   },
   "bin": {
-    "au": "./src/cli.js"
-  }
+    "au": "./.tsbuild/cli.js"
+  },
+  "type": "module"
 }
