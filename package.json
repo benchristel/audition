@@ -18,7 +18,7 @@
     "format": "node_modules/.bin/prettier -w src"
   },
   "dependencies": {
-    "@benchristel/taste": "^0.4.0",
+    "@benchristel/taste": "0.5.0",
     "yaml": "^2.1.3"
   }
 }

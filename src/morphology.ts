@@ -44,7 +44,7 @@ export const replace = curry(
     return [
       s.replace(pattern, replacement),
       pattern.test(s) ? "applied" : "does-not-match",
-    ]
+    ] as [string, "applied" | "does-not-match"]
   },
   "replace",
 )
