@@ -112,6 +112,23 @@ when you run the `au` program. The output goes to a file with the
 same name as the input file, but with the `.au` extension dropped. So translating
 `sample.md.au` would generate `sample.md`.
 
+### Input Metasyntax
+
+* **Pointers** refer to lexical entries. They are represented by a string that begins with an asterisk (`*`). For example, the pointer to the root "bar" is represented by the string `*bar`, which will parse to whatever `translation` value is associated with the id `bar`. In the context of the input text, one may not specify pointers; unmarked strings are taken as pointers.
+* **Literals** are words or phrases. In the input context, they are represented by a string that begins with a caret (`^`). For example, the literal "foo" is represented by the string `^foo`.  In the context of the lexicon `translation` column, one may not specify literals; unmarked strings are taken as literals.
+* **Inflections** are changes to the form of a word, such as the past tense or plural form. They are represented by a string that follows a pointer. For example, the inflection of the literal "baz" to the past tense is represented by the string `baz#PAST`.
+* **Compounds** are combinations of two or more glosses. They are represented by a string that begins with a square bracket (`[`). For example, the compound of the literal "foo" and the pointer to the root "bar" is represented by the string `[foo+*bar]`. Compounds can be inflected, too, eg `[foo+*bar]#PAST`.
+
+The following table summarizes the syntax of the different gloss features' metasyntax:
+
+Feature | Input Syntax | Lexicon Syntax
+---|---|---|
+Literal | String beginning with `*` | Plain string
+Pointer | Plain string | String beginning with `^`
+Inflection | String following another string and beginning with `#` 
+Compound | String beginning with `[` |
+
+
 ## Morphology
 
 Example of a small `morphology.yaml` file:
@@ -154,6 +171,14 @@ create regexes that are matched against the text on either side of the morpheme
 boundary. The last two items in the rule array specify replacements for the matches.
 `$1` is a capture group reference indicating that the vowel at the end of the
 first morpheme should be preserved.
+
+
+## Lexicon
+
+`lexicon.csv` has `id`, `translation`, and optional `generator` columns.
+
+- `id` defines the root string as written in glosses, 
+- `translation` will replace the id during parsing, and is also parsed as a gloss so it can reference other roots and morphemes.
 
 ## Generator
 
