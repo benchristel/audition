@@ -1,10 +1,8 @@
 import {expect, test, equals, which, is} from "@benchristel/taste"
 import {success, failure, Result} from "./result"
 // @ts-ignore
-import Parser from "./generated/csv-parser"
+import parser from "./generated/csv-parser"
 import {matches} from "./strings"
-
-const parser = Parser()
 
 test("parseCsv", {
   "given an empty string"() {

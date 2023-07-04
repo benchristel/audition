@@ -1,11 +1,9 @@
 import {expect, equals, test, which, is} from "@benchristel/taste"
 // @ts-ignore
-import GlossParser from "./generated/gloss-parser"
+import glossParser from "./generated/gloss-parser"
 import {exhausted} from "./lib/exhaust"
 import {failure, Result, success} from "./lib/result"
 import {matches} from "./lib/strings"
-
-const glossParser = GlossParser()
 
 export type Gloss = Literal | Pointer | Inflection | Compound
 
