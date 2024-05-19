@@ -12,6 +12,7 @@ import {matches} from "./lib/strings"
 import {Morphology, parseMorphology} from "./morphology"
 import {parseText, Text, toString} from "./text"
 import {Translator} from "./translator"
+import {listRecursively} from "./lib/files"
 
 export function main() {
   const args = _(
@@ -129,7 +130,7 @@ function loadMorphology(): Result<Morphology, string> {
 
 function loadTexts(): Result<Array<[string, Text]>, string> {
   return Result.all(
-    readdirSync(".")
+    listRecursively(".")
       .filter(matches(/\.au$/))
       .map((filename) =>
         Result.all([
